@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>花束みたいな日々 — 我们的恋爱日常</title>
+<meta name="description" content="一个关于我们的纪念网站 · 登录 + 中国地图/时间线双模式">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:   #ffffff;
+  --paper-2: #f2e6ea;
+  --cream:   #ffffff;
+  --ink:     #453b40;
+  --ink-soft:#8a747c;
+  --ink-faint:#c3a6b0;
+  --rose:    #ec92a9;
+  --rose-deep:#d46482;
+  --sage:    #c79bad;
+  --gold:    #e5b08a;
+  --frame-w: #ffffff;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:"ZCOOL KuaiLe","YouYuan","Yuanti SC","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--paper); color:var(--ink); line-height:1.9; letter-spacing:.02em;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+.grain{ position:fixed; inset:0; z-index:99999; pointer-events:none; opacity:.055; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.vignette{ position:fixed; inset:0; z-index:99998; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 58%, rgba(150,80,110,.16) 100%); }
+
+.wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+.wrap-wide{ max-width:1920px; margin:0 auto; padding:0 12px; }
+.hidden{ display:none !important; }
+[hidden]{ display:none !important; }
+
+/* ============ 登录页 ============ */
+#loginScreen{ position:fixed; inset:0; z-index:11000; display:flex; align-items:center; justify-content:center; padding:28px; background:linear-gradient(170deg,#fdf8f2 0%,#faf1e6 48%,#f6e8da 100%); }
+.login-wrap{ display:flex; align-items:stretch; gap:52px; width:min(1320px,100%); max-height:94vh; }
+.login-side{ flex:0 0 460px; display:flex; align-items:center; }
+.login-card{ width:100%; background:#fffdfb; border-radius:20px; box-shadow:0 34px 90px -34px rgba(150,105,85,.5); padding:60px 50px 52px; text-align:center; }
+.login-card .brand{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; font-size:13px; letter-spacing:.5em; color:var(--sage); text-transform:uppercase; }
+.login-cover{ width:118px; height:118px; margin:0 auto 20px; border-radius:50%; overflow:hidden; background:#f6e8da; border:4px solid #fff; box-shadow:0 14px 34px -14px rgba(150,105,85,.55); }
+.login-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
+.login-card h1{ margin-top:22px; font-size:46px; font-weight:500; letter-spacing:.1em; line-height:1.3; }
+.login-card .sub{ margin-top:14px; font-size:16px; color:var(--ink-soft); letter-spacing:.2em; }
+.login-form{ margin-top:40px; text-align:left; }
+.login-form .hint{ font-size:15px; color:var(--ink-soft); letter-spacing:.06em; margin-bottom:6px; }
+.login-form label{ display:block; font-size:15px; color:var(--ink-soft); margin:16px 0 8px; }
+.login-form input{ width:100%; padding:15px 16px; font-size:17px; border:1px solid var(--ink-faint); border-radius:6px; background:#fff; color:var(--ink); font-family:inherit; }
+.login-form input:focus{ outline:none; border-color:var(--rose); }
+.login-form .btn{ padding:15px; font-size:17px; letter-spacing:.2em; }
+.login-err{ min-height:20px; margin-top:14px; font-size:14px; color:var(--rose-deep); }
+
+/* 拨号式密码键盘 */
+.pin-display{ height:60px; display:flex; align-items:center; justify-content:center; background:#fdf6ef; border:1px solid #f0dfcd; border-radius:12px; font-size:30px; letter-spacing:10px; color:#5c4a44; margin-bottom:18px; }
+.pin-display .pin-hint{ font-size:15px; letter-spacing:.2em; color:#c8b3a5; }
+.keypad{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.keypad .key{ height:58px; border:1px solid #f0dfcd; border-radius:14px; background:#fffdfb; color:var(--ink); font-family:inherit; font-size:24px; cursor:pointer; transition:.15s; box-shadow:0 2px 8px -3px rgba(150,105,85,.2); }
+.keypad .key:hover{ background:#fdf6ef; border-color:#e5c7ae; }
+.keypad .key:active{ transform:scale(.95); background:#f8e6d3; }
+.keypad .key-fn{ font-size:14px; letter-spacing:.08em; color:#a98f80; }
+.kb-toggle{ margin-top:14px; text-align:center; font-size:12px; color:#c8b3a5; cursor:pointer; letter-spacing:.08em; }
+.kb-toggle:hover{ color:#8a6b57; }
+.kb-input{ width:100%; padding:14px 16px; font-size:17px; border:1px solid #e7d5c5; border-radius:10px; background:#fffdfb; color:var(--ink); font-family:inherit; margin-top:4px; }
+
+/* 登录页右侧:相册(拍立得 + 跟随鼠标 3D 晃动) */
+.login-show{ flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; perspective:1400px; }
+.album{ position:relative; width:100%; height:min(76vh,720px); min-height:440px; transform-style:preserve-3d; transition:transform .25s ease-out; }
+.album-card{ position:absolute; left:var(--x); top:var(--y); width:29%; transform:translate(-50%,-50%) rotate(var(--rot)) translateZ(var(--z)); background:#fffdfb; border-radius:6px; padding:12px 12px 0; box-shadow:0 20px 45px -16px rgba(150,105,85,.4); }
+.album-card:hover{ z-index:5; box-shadow:0 30px 60px -18px rgba(120,60,80,.55); }
+.album-card .pc-img{ display:block; width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:3px; background:#fceff3; }
+.album-card .pc-ph{ display:flex; align-items:center; justify-content:center; font-size:3rem; color:var(--ink-soft); aspect-ratio:4/3; }
+.album-card .pc-cap{ padding:12px 6px 14px; text-align:center; }
+.album-card .pc-t{ font-size:15px; letter-spacing:.05em; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.album-card .pc-s{ font-size:12px; color:var(--ink-faint); margin-top:3px; letter-spacing:.05em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+@media (max-width:760px){
+  .login-wrap{ flex-direction:column; gap:22px; max-height:none; overflow-y:auto; align-items:center; }
+  .login-side{ flex:1 1 auto; width:100%; max-width:480px; }
+  .album{ height:60vh; min-height:360px; }
+}
+
+/* ============ 顶栏 / 模式切换 ============ */
+.topbar{ position:sticky; top:0; z-index:5000; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--paper-2); }
+.topbar-inner{ max-width:1080px; margin:0 auto; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.topbar-brand{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; font-size:12px; letter-spacing:.4em; color:var(--sage); }
+.topbar-right{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.seg{ display:flex; border:1px solid var(--paper-2); border-radius:999px; overflow:hidden; background:var(--cream); }
+.seg button{ border:none; background:none; padding:7px 20px; font-family:inherit; font-size:13px; letter-spacing:.1em; color:var(--ink-soft); cursor:pointer; }
+.seg button.active{ background:var(--ink); color:var(--cream); }
+.icon-btn{ background:none; border:none; font-size:13px; color:var(--ink-soft); cursor:pointer; font-family:inherit; letter-spacing:.08em; }
+.icon-btn:hover{ color:var(--rose-deep); }
+
+/* ============ Hero ============ */
+.hero-compact{ text-align:left; padding:20px 28px 12px; max-width:1920px; margin:0 auto; }
+.hero-compact .brand{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; font-size:11px; letter-spacing:.4em; color:var(--sage); text-transform:uppercase; }
+.hero-compact h1{ margin-top:4px; font-size:clamp(26px,3.6vw,42px); font-weight:600; letter-spacing:.04em; line-height:1.2; }
+.hero-compact .tagline{ margin-top:4px; font-size:12px; color:var(--ink-soft); letter-spacing:.16em; }
+.hero-compact .days{ margin-top:8px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.hero-compact .days .num{ font-size:clamp(22px,2.8vw,32px); font-weight:600; line-height:1; color:var(--rose-deep); font-feature-settings:"tnum"; }
+.hero-compact .days .unit{ font-size:13px; letter-spacing:.2em; color:var(--ink-soft); }
+.hero-compact .live{ margin-top:0; color:var(--ink-faint); font-size:12px; letter-spacing:.12em; font-feature-settings:"tnum"; }
+
+/* ============ 模式内容区 ============ */
+.mode{ padding:20px 0 90px; }
+#mode-map{ padding-top:6px; }
+#mode-map .section-head{ margin-bottom:16px; }
+#mode-map h2{ font-size:clamp(20px,2.8vw,30px); }
+.mode .section-head{ text-align:center; margin-bottom:36px; }
+.mode .kicker{ display:block; font-size:12px; letter-spacing:.42em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:14px; }
+.mode h2{ font-size:clamp(24px,3.6vw,36px); font-weight:500; letter-spacing:.08em; }
+.mode .sub{ color:var(--ink-soft); font-size:13px; letter-spacing:.1em; margin-top:8px; }
+.jp-note{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; color:var(--rose); font-size:14px; letter-spacing:.14em; }
+
+/* 时间线 */
+.timeline{ position:relative; max-width:960px; margin:0 auto; }
+.timeline::before{ content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; background:linear-gradient(var(--rose),var(--gold),var(--sage)); opacity:.55; transform:translateX(-50%); }
+.tl-item{ position:relative; width:50%; padding:0 52px 72px 0; }
+.tl-item:nth-child(even){ margin-left:50%; padding:0 0 72px 52px; }
+.tl-item::before{ content:""; position:absolute; top:6px; width:14px; height:14px; border-radius:50%; background:var(--rose); border:3px solid var(--paper); box-shadow:0 0 0 1px var(--rose); }
+.tl-item:nth-child(odd)::before{ right:-7px; }
+.tl-item:nth-child(even)::before{ left:-7px; }
+.tl-date{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; font-size:15px; letter-spacing:.2em; color:var(--rose-deep); }
+.tl-tag{ display:inline-block; margin-top:2px; font-size:11px; letter-spacing:.28em; color:var(--ink-faint); border:1px solid var(--ink-faint); border-radius:2px; padding:1px 8px; }
+.tl-card{ margin-top:16px; background:var(--cream); border-radius:4px; box-shadow:0 12px 30px -18px rgba(70,50,30,.35); overflow:hidden; }
+.tl-item:nth-child(odd) .tl-card{ transform:rotate(-1.2deg); }
+.tl-item:nth-child(even) .tl-card{ transform:rotate(1.2deg); }
+.tl-card:hover{ box-shadow:0 20px 42px -18px rgba(70,50,30,.45); }
+.frame{ background:var(--frame-w); padding:10px 10px 0; }
+.pic{ position:relative; overflow:hidden; aspect-ratio:4/3; background:linear-gradient(135deg,#fceff3,#f4d7e1); }
+.pic .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3.4rem; opacity:.9; }
+.pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.gallery{ display:grid; grid-template-columns:repeat(2,1fr); gap:4px; }
+.gal{ position:relative; aspect-ratio:4/3; overflow:hidden; background:#fceff3; }
+.gal img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.tl-body{ padding:18px 20px 22px; }
+.tl-title{ font-size:19px; font-weight:600; letter-spacing:.06em; margin-bottom:8px; }
+.tl-text{ font-size:14px; color:var(--ink-soft); }
+.tl-place{ margin-top:10px; font-size:12px; color:var(--ink-faint); letter-spacing:.05em; }
+.empty-hint{ text-align:center; color:var(--ink-faint); font-size:14px; letter-spacing:.1em; padding:40px 0; }
+
+/* 地图(中国省市下钻) */
+.map-crumbs{ display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.map-crumbs .back{ background:none; border:1px solid var(--ink-faint); border-radius:999px; padding:5px 14px; font-family:inherit; font-size:12px; color:var(--ink-soft); cursor:pointer; letter-spacing:.08em; }
+.map-crumbs .back:hover{ color:var(--rose-deep); border-color:var(--rose); }
+.map-crumbs .crumb{ font-size:14px; letter-spacing:.08em; color:var(--ink-faint); }
+.map-crumbs .crumb.active{ color:var(--rose-deep); font-weight:600; }
+.map-crumbs .crumb-sep{ color:var(--ink-faint); }
+.map-shell{ position:relative; max-width:none; margin:0 auto; border-radius:8px; overflow:hidden; box-shadow:0 20px 50px -25px rgba(70,50,30,.5); border:8px solid var(--frame-w); background:var(--cream); }
+#map{ height:clamp(60vh, 84vh, 1100px); background:var(--paper); }
+.geo-svg{ display:block; width:100%; height:100%; }
+.geo{ stroke:#f0e2e7; stroke-width:1; vector-effect:non-scaling-stroke; cursor:pointer; transition:fill .18s ease; }
+.geo:hover{ fill:#f5cdd7; }
+.geo-label{ fill:#8a747c; font-size:13px; text-anchor:middle; pointer-events:none; font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; paint-order:stroke; stroke:#ffffff; stroke-width:3px; stroke-linejoin:round; }
+.geo-label.lit{ fill:#d46482; font-weight:600; }
+.map-tip{ position:absolute; z-index:10; padding:6px 12px; background:rgba(255,255,255,.97); border:1px solid #f2d4dc; border-radius:4px; font-size:12px; color:#453b40; letter-spacing:.05em; pointer-events:none; white-space:nowrap; box-shadow:0 6px 16px -6px rgba(140,70,90,.32); }
+.map-fallback{ height:520px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--ink-soft); font-size:14px; text-align:center; padding:24px; }
+.map-fallback .big{ font-size:44px; }
+
+/* 城市回忆面板 */
+.mem-panel{ position:absolute; inset:0; z-index:20; }
+.mem-overlay{ position:absolute; inset:0; background:rgba(80,50,62,.26); backdrop-filter:blur(2px); }
+.mem-box{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(480px,90%); max-height:92%; overflow-y:auto; background:var(--cream); border-radius:10px; box-shadow:0 30px 80px -25px rgba(120,60,80,.55); padding:18px; }
+.mem-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.mem-title{ font-size:16px; font-weight:600; letter-spacing:.06em; }
+.mem-count{ font-size:12px; color:var(--ink-faint); }
+.mem-close{ background:none; border:none; font-size:24px; color:var(--ink-soft); cursor:pointer; line-height:1; }
+.mem-card{ display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--paper-2); }
+.mem-card .pic{ width:88px; aspect-ratio:4/3; border-radius:4px; flex:none; }
+.mem-card .pic .ph{ font-size:1.8rem; }
+.mem-card .mt{ font-size:15px; font-weight:600; }
+.mem-card .md{ font-size:12px; color:var(--ink-faint); margin-top:1px; }
+.mem-card .mtxt{ font-size:13px; color:var(--ink-soft); margin-top:3px; }
+.mem-actions{ display:flex; align-items:center; gap:8px; flex:none; }
+.mem-add{ background:none; border:1px solid var(--ink-faint); border-radius:999px; padding:4px 12px; font-family:inherit; font-size:12px; color:var(--ink-soft); cursor:pointer; letter-spacing:.04em; }
+.mem-add:hover{ color:var(--rose-deep); border-color:var(--rose); }
+.mem-n{ display:inline-block; margin-left:8px; font-size:11px; color:var(--ink-faint); border:1px solid var(--ink-faint); border-radius:3px; padding:0 6px; vertical-align:middle; }
+
+/* 多图编辑器(管理后台 + 快速添加共用) */
+.ed-imgs{ display:grid; grid-template-columns:repeat(auto-fill,minmax(72px,1fr)); gap:8px; margin:6px 0; }
+.ed-img{ position:relative; aspect-ratio:4/3; border-radius:4px; overflow:hidden; background:#fceff3; }
+.ed-img img{ width:100%; height:100%; object-fit:cover; display:block; }
+.ed-img-x{ position:absolute; top:2px; right:2px; width:20px; height:20px; border:none; border-radius:50%; background:rgba(59,50,42,.74); color:#fff; font-size:14px; line-height:1; cursor:pointer; }
+
+/* 快速添加回忆弹窗 */
+.add-modal{ position:fixed; inset:0; z-index:10500; }
+.add-overlay{ position:absolute; inset:0; background:rgba(55,42,30,.45); backdrop-filter:blur(3px); }
+.add-card{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:min(480px,94vw); max-height:88vh; overflow-y:auto; background:var(--cream); border-radius:10px; box-shadow:0 30px 80px -20px rgba(0,0,0,.4); padding:26px 24px; }
+.add-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.add-title{ font-size:17px; font-weight:600; letter-spacing:.12em; }
+.add-close{ background:none; border:none; font-size:26px; color:var(--ink-soft); cursor:pointer; line-height:1; }
+.add-loc{ font-size:13px; color:var(--rose-deep); margin-bottom:10px; letter-spacing:.05em; }
+.add-field{ display:block; font-size:12px; color:var(--ink-soft); margin-top:12px; }
+.add-field input, .add-field textarea{ width:100%; margin-top:4px; padding:9px 10px; border:1px solid var(--paper-2); border-radius:4px; background:#fff; color:var(--ink); font-family:inherit; font-size:14px; }
+.add-field textarea{ resize:vertical; min-height:64px; }
+.add-hint{ font-size:11px; color:var(--ink-faint); margin-left:8px; }
+.add-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+/* ============ 结尾 ============ */
+.footer{ padding:60px 24px 90px; text-align:center; }
+.footer .big{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; font-size:clamp(22px,4vw,34px); letter-spacing:.16em; color:var(--ink); }
+.footer .names{ margin-top:18px; color:var(--rose-deep); letter-spacing:.3em; font-size:15px; }
+.footer .heart{ font-size:20px; color:var(--rose); margin:0 10px; }
+
+.reveal{ opacity:0; transform:translateY(26px); transition:opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+.reveal.is-visible{ opacity:1; transform:none; }
+
+/* ============ 管理后台 ============ */
+#admin{ position:fixed; inset:0; z-index:10000; display:none; }
+#admin.open{ display:block; }
+.admin-overlay{ position:absolute; inset:0; background:rgba(55,42,30,.45); backdrop-filter:blur(3px); }
+.admin-panel{ position:absolute; top:0; right:0; bottom:0; width:min(520px,100vw); background:var(--paper); box-shadow:-20px 0 60px rgba(0,0,0,.28); overflow-y:auto; padding:28px 26px 70px; }
+.admin-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.admin-head .t{ font-size:17px; letter-spacing:.2em; color:var(--ink); }
+.admin-close{ background:none; border:none; font-size:28px; color:var(--ink-soft); cursor:pointer; line-height:1; }
+.btn{ display:inline-block; padding:10px 18px; border:none; border-radius:4px; cursor:pointer; font-family:inherit; letter-spacing:.1em; font-size:14px; background:var(--ink); color:var(--cream); }
+.btn.rose{ background:var(--rose-deep); color:#fff; }
+.btn.ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--ink-faint); }
+.btn.sm{ padding:6px 12px; font-size:12px; }
+.btn:hover{ opacity:.88; }
+.btn.block{ width:100%; text-align:center; }
+.tabs{ display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid var(--paper-2); }
+.tab{ background:none; border:none; padding:10px 14px; font-family:inherit; font-size:14px; color:var(--ink-soft); cursor:pointer; letter-spacing:.1em; border-bottom:2px solid transparent; }
+.tab.active{ color:var(--rose-deep); border-bottom-color:var(--rose-deep); }
+.ed-item{ border:1px solid var(--paper-2); border-radius:6px; padding:16px; margin-bottom:16px; background:var(--cream); }
+.ed-item .ed-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.ed-item .ed-idx{ font-size:12px; color:var(--ink-faint); letter-spacing:.2em; }
+.ed-thumb{ display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+.ed-thumb .pic{ width:120px; aspect-ratio:4/3; border-radius:4px; flex:none; }
+.ed-thumb .btns{ display:flex; flex-direction:column; gap:8px; }
+.ed-item label{ display:block; font-size:12px; color:var(--ink-soft); margin-top:10px; }
+.ed-item input, .ed-item textarea, .ed-item select{ width:100%; margin-top:4px; padding:9px 10px; border:1px solid var(--paper-2); border-radius:4px; background:#fff; color:var(--ink); font-family:inherit; font-size:14px; }
+.ed-item textarea{ resize:vertical; min-height:72px; line-height:1.7; }
+.ed-hint{ font-size:11px; color:var(--ink-faint); margin-top:4px; line-height:1.6; }
+.add-bar{ margin:4px 0 20px; }
+.settings label{ display:block; font-size:12px; color:var(--ink-soft); margin-top:12px; }
+.settings input{ width:100%; margin-top:4px; padding:9px 10px; border:1px solid var(--paper-2); border-radius:4px; background:#fff; color:var(--ink); font-family:inherit; font-size:14px; }
+.settings hr{ border:none; border-top:1px solid var(--paper-2); margin:22px 0 4px; }
+.settings .row{ display:flex; gap:12px; flex-direction:column; margin-top:20px; }
+
+@media (max-width:680px){
+  .topbar-inner{ justify-content:center; }
+  .hero-compact{ padding:50px 24px 26px; }
+  .timeline::before{ left:18px; }
+  .tl-item, .tl-item:nth-child(even){ width:100%; margin-left:0; padding:0 0 56px 52px; }
+  .tl-item::before, .tl-item:nth-child(even)::before{ left:11px; right:auto; }
+  .tl-item:nth-child(odd) .tl-card, .tl-item:nth-child(even) .tl-card{ transform:none; }
+  #map{ height:58vh; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<!-- ============ 登录页 ============ -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-side">
+      <div class="login-card">
+        <div class="login-cover" id="loginCover" hidden></div>
+        <div class="brand" id="loginBrand">OUR LOVE STORY</div>
+        <h1 id="loginTitle">花束みたいな<br>日々</h1>
+        <div class="sub">我们的恋爱日常</div>
+        <div class="login-form">
+          <div class="hint" id="loginHint">请输入密码</div>
+          <form id="loginForm">
+            <div class="pin-display" id="loginDisplay"><span class="pin-hint">输入密码</span></div>
+            <input type="password" id="loginPw" hidden>
+            <div class="keypad" id="loginKeypad">
+              <button type="button" class="key" data-k="1">1</button>
+              <button type="button" class="key" data-k="2">2</button>
+              <button type="button" class="key" data-k="3">3</button>
+              <button type="button" class="key" data-k="4">4</button>
+              <button type="button" class="key" data-k="5">5</button>
+              <button type="button" class="key" data-k="6">6</button>
+              <button type="button" class="key" data-k="7">7</button>
+              <button type="button" class="key" data-k="8">8</button>
+              <button type="button" class="key" data-k="9">9</button>
+              <button type="button" class="key key-fn" data-k="clear">清空</button>
+              <button type="button" class="key" data-k="0">0</button>
+              <button type="button" class="key key-fn" data-k="del">⌫</button>
+            </div>
+            <input type="password" id="loginPwText" class="kb-input" placeholder="输入密码" autocomplete="current-password" hidden>
+            <div class="kb-toggle" id="kbToggle">⌨ 使用键盘输入</div>
+            <button class="btn block" style="margin-top:16px">进入</button>
+          </form>
+          <form id="setupForm" hidden>
+            <label>设置访问密码(4-8 位数字)</label>
+            <input type="password" id="setupPw1" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" maxlength="8">
+            <label>再输一次</label>
+            <input type="password" id="setupPw2" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" maxlength="8">
+            <button class="btn block" style="margin-top:18px">保存密码并进入</button>
+          </form>
+          <div class="login-err" id="loginErr"></div>
+        </div>
+      </div>
+    </div>
+    <div class="login-show" id="loginShow">
+      <div class="album" id="loginAlbum"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 主应用 ============ -->
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-brand" id="topBrand">OUR LOVE STORY</div>
+      <div class="topbar-right">
+        <div class="seg">
+          <button id="segMap" data-mode="map">🗺 地图</button>
+          <button id="segTimeline" data-mode="timeline">📖 时间线</button>
+        </div>
+        <button class="icon-btn" id="adminOpen">⚙ 管理</button>
+        <button class="icon-btn" id="logoutBtn">退出</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero-compact">
+    <div class="brand" id="brand"></div>
+    <h1 id="heroTitle"></h1>
+    <div class="tagline" id="tagline"></div>
+    <div class="days">
+      <div class="num" id="dayNum">0</div>
+      <div class="unit">天</div>
+      <div class="live" id="dayLive">——</div>
+    </div>
+  </section>
+
+  <!-- 地图模式 -->
+  <section class="mode" id="mode-map">
+    <div class="wrap-wide">
+      <div class="section-head">
+        <span class="kicker">Map</span>
+        <h2>ふたりの地図</h2>
+        <div class="sub">一起走过的中国地图 <span class="jp-note">· 点击省份逐级下钻</span></div>
+      </div>
+      <div class="map-crumbs">
+        <button class="back" id="backBtn" hidden>← 返回全国</button>
+        <span class="crumb active" id="crumbChina">全国</span>
+        <span class="crumb-sep" id="crumbSep" hidden>&gt;</span>
+        <span class="crumb active" id="crumbProv" hidden></span>
+      </div>
+      <div class="map-shell">
+        <div id="map"></div>
+        <div id="mapTip" class="map-tip" hidden></div>
+        <!-- 城市回忆面板(跟随地图 · 居中) -->
+        <div id="memPanel" class="mem-panel" hidden>
+          <div class="mem-overlay" id="memOverlay"></div>
+          <div class="mem-box">
+            <div class="mem-head">
+              <div>
+                <div class="mem-title" id="memTitle"></div>
+                <div class="mem-count" id="memCount"></div>
+              </div>
+              <div class="mem-actions">
+                <button class="mem-add" id="memAdd">＋ 添加回忆</button>
+                <button class="mem-close" id="memClose">×</button>
+              </div>
+            </div>
+            <div class="mem-list" id="memList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 时间线模式 -->
+  <section class="mode" id="mode-timeline">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Timeline</span>
+        <h2>ふたりの時間</h2>
+        <div class="sub">我们的时间线 <span class="jp-note">· 一点一滴</span></div>
+      </div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="big">未完待续 · ずっと</div>
+    <div class="names" id="names"></div>
+  </footer>
+</div>
+
+<!-- 快速添加回忆弹窗(双击城市 / 面板「＋」) -->
+<div id="addModal" class="add-modal" hidden>
+  <div class="add-overlay" id="addOverlay"></div>
+  <div class="add-card">
+    <div class="add-head">
+      <div class="add-title">＋ 添加回忆</div>
+      <button class="add-close" id="addClose">×</button>
+    </div>
+    <div class="add-loc" id="addLoc"></div>
+    <label class="add-field">标题<input id="addInTitle" placeholder="给这段回忆起个名字"></label>
+    <label class="add-field">日期<input id="addInDate" placeholder="如 2024.05.20(可选)"></label>
+    <label class="add-field">标签<input id="addInTag" placeholder="如 はじまり · 相遇(可选)"></label>
+    <label class="add-field">文字<textarea id="addInText" placeholder="写下当时的心情…"></textarea></label>
+    <div class="add-field">照片<span class="add-hint">可加多张 · 无数量限制</span>
+      <div class="ed-imgs" id="addImgs"></div>
+      <button class="btn ghost sm" id="addImgBtn">＋ 添加照片</button>
+    </div>
+    <div class="add-actions">
+      <button class="btn ghost" id="addCancel">取消</button>
+      <button class="btn rose" id="addSave">保存回忆</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 管理后台 ============ -->
+<div id="admin">
+  <div class="admin-overlay" id="adminOverlay"></div>
+  <div class="admin-panel">
+    <div class="admin-head">
+      <div class="t">管理后台</div>
+      <button class="admin-close" id="adminClose">×</button>
+    </div>
+    <div class="tabs">
+      <button class="tab" data-act="tab" data-tab="events">回忆事件</button>
+      <button class="tab" data-act="tab" data-tab="settings">设置</button>
+    </div>
+
+    <div id="tab-events">
+      <div class="add-bar"><button class="btn sm" data-act="add">＋ 新增回忆</button></div>
+      <div class="ed-hint" style="margin:-8px 0 16px">一条「回忆」= 时间线的故事 + 地图上的一个点。填了日期→出现在时间线;选了省/市→出现在地图。</div>
+      <div id="evList"></div>
+    </div>
+
+    <div id="tab-settings" class="settings" hidden>
+      <label>纪念日 · 在一起的第一天</label>
+      <input type="date" id="set-start">
+      <label>你的名字</label>
+      <input id="set-you">
+      <label>TA 的名字</label>
+      <input id="set-ta">
+      <label>顶部小字</label>
+      <input id="set-titleEn">
+      <label>大标题(第一行)</label>
+      <input id="set-title">
+      <label>大标题(第二行)</label>
+      <input id="set-title2">
+      <label>副标题</label>
+      <input id="set-tagline">
+      <label>输入密码处的头像</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+        <div id="set-avatar-preview" style="width:64px;height:64px;border-radius:50%;overflow:hidden;background:#f6e8da;border:2px solid var(--paper-2);flex:0 0 auto"></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn sm" data-act="avatar">上传头像</button>
+          <button class="btn ghost sm" data-act="avatarClear">清除</button>
+        </div>
+      </div>
+      <div class="ed-hint" style="margin-top:8px">不设置时,自动用最新一条回忆的第一张照片。</div>
+      <hr>
+      <label>修改访问密码(留空则不修改)</label>
+      <input type="password" id="set-pw" autocomplete="new-password">
+      <div class="row">
+        <button class="btn rose" data-act="save">💾 保存并应用</button>
+        <button class="btn" data-act="export">⬇ 导出成品文件</button>
+        <button class="btn ghost" data-act="reset">↺ 恢复默认内容</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
+<datalist id="cityDatalist"></datalist>
+
+<!-- ============ 默认数据(导出时会被替换成你的内容) ============ -->
+<script type="application/json" id="site-data">
+{
+  "startDate": "2023-05-20",
+  "names": { "you": "你的名字", "ta": "TA的名字" },
+  "title": "恋爱の日记",
+  "title2": "",
+  "titleEn": "OUR LOVE STORY",
+  "tagline": "我们的恋爱日常 · 一起走过的每一天",
+  "loginAvatar": "",
+  "events": [
+    {"id":"e1","date":"2023.05.20","tag":"はじまり · 相遇","title":"那天,靠窗的位置","text":"你在咖啡馆靠窗的位置看书,阳光落下来,我第一次知道什么叫「想认识一个人」。","province":"广东省","city":"深圳市","images":["https://images.pexels.com/photos/36557574/pexels-photo-36557574.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"☕"},
+    {"id":"e2","date":"2023.06.10","tag":"初デート · 第一次约会","title":"散步到天黑","text":"看完展出来下了点小雨,你自然地走在了车流的那一侧。心跳声比雨还响。","province":"广东省","city":"深圳市","images":["https://images.pexels.com/photos/35748415/pexels-photo-35748415.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"🌿"},
+    {"id":"e3","date":"2023.08.01","tag":"おそろいの歌 · 共享耳机","title":"一人一只耳机","text":"从街头听到街尾,同一首歌、同一个节拍。歌单像我们之间小小的约定。","province":"广东省","city":"广州市","images":["https://images.pexels.com/photos/5118434/pexels-photo-5118434.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"🎧"},
+    {"id":"e4","date":"2023.11.15","tag":"花束 · 送花","title":"花会谢,可爱不会","text":"你说「花会谢」,我说「可爱不会」。那束花的香味,到现在还记得。","province":"上海市","city":"","images":["https://images.pexels.com/photos/34390228/pexels-photo-34390228.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"💐"},
+    {"id":"e5","date":"2024.02.14","tag":"旅 · 一起旅行","title":"慢车去海边","text":"坐慢车去海边,你在站台回头笑了一下,那一瞬间想按下无数次快门。","province":"福建省","city":"厦门市","images":["https://images.pexels.com/photos/35351812/pexels-photo-35351812.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"🚃"},
+    {"id":"e6","date":"2024.06.01","tag":"写真 · 记录","title":"买了台胶片机","text":"从此相册里全是你。胶卷冲洗出来的颗粒感,像把时光也一起显影了。","province":"四川省","city":"成都市","images":["https://images.pexels.com/photos/33486208/pexels-photo-33486208.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"📷"},
+    {"id":"e7","date":"2024.09.30","tag":"日常 · 咖啡","title":"周末的下午","text":"阳光落在抹茶拿铁和你脸上,一坐就是一整个下午。平凡,却最珍贵。","province":"广东省","city":"深圳市","images":["https://images.pexels.com/photos/31333514/pexels-photo-31333514.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"🍵"},
+    {"id":"e8","date":"2025.05.20","tag":"現在 · 未完待续","title":"故事还在继续","text":"接下来的每一页,还想和你一起写下去。","province":"","city":"","images":["https://images.pexels.com/photos/29483981/pexels-photo-29483981.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"🕊️"}
+  ]
+}
+</script>
+
+<script type="application/json" id="admin-config">{"hash":""}</script>
+
+<script src="china-geo.js" id="china-geo-src"></script>
+<script>
+/* =====================================================================
+   工具
+   ===================================================================== */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function val(id, v){ const el = document.getElementById(id); if(v !== undefined) el.value = v; return el.value; }
+function hashPw(pw){ let h = 5381; const s = pw + '::love-story-salt'; for(let i=0;i<s.length;i++){ h = ((h<<5)+h) ^ s.charCodeAt(i); } return (h>>>0).toString(16); }
+function dateKey(d){ const m = String(d||'').match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/); return m ? (+m[1]*10000 + +m[2]*100 + +m[3]) : 0; }
+
+/* 34 个省级行政区(与地图 GeoJSON 名称一致) */
+const PROVINCES = [
+  {name:"北京市",adcode:"110000"},{name:"天津市",adcode:"120000"},{name:"河北省",adcode:"130000"},
+  {name:"山西省",adcode:"140000"},{name:"内蒙古自治区",adcode:"150000"},{name:"辽宁省",adcode:"210000"},
+  {name:"吉林省",adcode:"220000"},{name:"黑龙江省",adcode:"230000"},{name:"上海市",adcode:"310000"},
+  {name:"江苏省",adcode:"320000"},{name:"浙江省",adcode:"330000"},{name:"安徽省",adcode:"340000"},
+  {name:"福建省",adcode:"350000"},{name:"江西省",adcode:"360000"},{name:"山东省",adcode:"370000"},
+  {name:"河南省",adcode:"410000"},{name:"湖北省",adcode:"420000"},{name:"湖南省",adcode:"430000"},
+  {name:"广东省",adcode:"440000"},{name:"广西壮族自治区",adcode:"450000"},{name:"海南省",adcode:"460000"},
+  {name:"重庆市",adcode:"500000"},{name:"四川省",adcode:"510000"},{name:"贵州省",adcode:"520000"},
+  {name:"云南省",adcode:"530000"},{name:"西藏自治区",adcode:"540000"},{name:"陕西省",adcode:"610000"},
+  {name:"甘肃省",adcode:"620000"},{name:"青海省",adcode:"630000"},{name:"宁夏回族自治区",adcode:"640000"},
+  {name:"新疆维吾尔自治区",adcode:"650000"},{name:"台湾省",adcode:"710000"},{name:"香港特别行政区",adcode:"810000"},
+  {name:"澳门特别行政区",adcode:"820000"}
+];
+/* 直辖市/特别行政区：点进去直接看回忆,不再下钻 */
+const MUNICIPALITIES = ["北京市","天津市","上海市","重庆市","香港特别行政区","澳门特别行政区"];
+
+/* =====================================================================
+   数据
+   ===================================================================== */
+const DEFAULT_SITE = JSON.parse(document.getElementById('site-data').textContent);
+let SITE = loadSite();
+const DEFAULT_MODE = 'map';
+let mode = DEFAULT_MODE;
+
+function loadSite(){
+  let site;
+  try{ const s = localStorage.getItem('love-site'); if(s) site = JSON.parse(s); }catch(e){}
+  if(!site) site = JSON.parse(JSON.stringify(DEFAULT_SITE));
+  (site.events || []).forEach(e => { if(!Array.isArray(e.images)) e.images = (e.img ? [e.img] : []); delete e.img; });
+  return site;
+}
+function saveSite(){
+  try{ localStorage.setItem('love-site', JSON.stringify(SITE)); }
+  catch(e){ alert('保存失败:浏览器本地存储满了(照片太多)。请删掉几张本地照片,或改用网络图片链接。'); }
+}
+function adminHash(){
+  try{ const h = localStorage.getItem('love-admin'); if(h) return h; }catch(e){}
+  try{ return JSON.parse(document.getElementById('admin-config').textContent).hash || ''; }catch(e){ return ''; }
+}
+
+/* =====================================================================
+   渲染(标题 / 时间线)
+   ===================================================================== */
+function renderHero(){
+  document.getElementById('brand').textContent = SITE.titleEn;
+  document.getElementById('topBrand').textContent = SITE.titleEn;
+  document.getElementById('loginBrand').textContent = SITE.titleEn;
+  document.getElementById('heroTitle').innerHTML = esc(SITE.title) + (SITE.title2 ? '<br>' + esc(SITE.title2) : '');
+  document.getElementById('loginTitle').innerHTML = esc(SITE.title) + (SITE.title2 ? '<br>' + esc(SITE.title2) : '');
+  document.getElementById('tagline').textContent = SITE.tagline;
+  document.getElementById('names').innerHTML = esc(SITE.names.you) + '<span class="heart">♡</span>' + esc(SITE.names.ta);
+}
+
+function frameHTML(e){
+  const imgs = (e.images || []).filter(Boolean);
+  if(imgs.length === 1){
+    return '<div class="frame"><div class="pic"><div class="ph">' + esc(e.motif || '💌') + '</div><img src="' + esc(imgs[0]) + '" alt="" loading="lazy" onerror="this.remove()"></div></div>';
+  }
+  if(imgs.length > 1){
+    return '<div class="frame"><div class="gallery">' + imgs.map(u => '<div class="gal"><img src="' + esc(u) + '" alt="" loading="lazy" onerror="this.remove()"></div>').join('') + '</div></div>';
+  }
+  return '<div class="frame"><div class="pic"><div class="ph">' + esc(e.motif || '💌') + '</div></div></div>';
+}
+function tlItemHTML(e){
+  const loc = (e.province || e.city) ? '<div class="tl-place">📍 ' + esc([e.province, e.city].filter(Boolean).join(' · ')) + '</div>' : '';
+  return '<div class="tl-item reveal">' +
+    '<div class="tl-date">' + esc(e.date) + '</div>' +
+    (e.tag ? '<span class="tl-tag">' + esc(e.tag) + '</span>' : '') +
+    '<div class="tl-card">' + frameHTML(e) + '<div class="tl-body"><div class="tl-title">' + esc(e.title) + '</div>' +
+    (e.text ? '<p class="tl-text">' + esc(e.text) + '</p>' : '') + loc +
+    '</div></div></div>';
+}
+function renderTimeline(){
+  const withDate = SITE.events.filter(e => e.date && dateKey(e.date) > 0).sort((a,b) => dateKey(a.date) - dateKey(b.date));
+  const noDate = SITE.events.filter(e => !e.date || dateKey(e.date) === 0);
+  const list = withDate.concat(noDate);
+  document.getElementById('timeline').innerHTML = list.length
+    ? list.map(tlItemHTML).join('')
+    : '<div class="empty-hint">还没有回忆 · 点右上角「⚙ 管理」添加第一条吧</div>';
+}
+
+/* =====================================================================
+   地图(中国省市逐级下钻)
+   ===================================================================== */
+let mapLevel = 'china', curProvince = '', curAdcode = '';
+
+const GEO = () => window.CHINA_GEO || { provinces: [], children: {} };
+
+/* 投影:省图 = 全国定界;市图 = 自动放大到该省范围(填满画布) */
+let MW = 1090, MH = 616, PX = lng => 0, PY = lat => 0;
+function setProj(p){ MW = p.MW; MH = p.MH; PX = p.px; PY = p.py; }
+function chinaProj(){
+  const L0 = 73, L1 = 135.5, B0 = 17.5, B1 = 53.5, S = 16;
+  return { MW: Math.round((L1 - L0) * S) + 90, MH: Math.round((B1 - B0) * S) + 40,
+    px: lng => 45 + (lng - L0) * S, py: lat => 20 + (B1 - lat) * S };
+}
+function boundsOf(features){
+  let minL = Infinity, maxL = -Infinity, minB = Infinity, maxB = -Infinity;
+  const walk = rings => rings.forEach(r => r.forEach(p => {
+    if(p[0] < minL) minL = p[0]; if(p[0] > maxL) maxL = p[0];
+    if(p[1] < minB) minB = p[1]; if(p[1] > maxB) maxB = p[1];
+  }));
+  features.forEach(f => { if(f.t === 'Polygon') walk(f.c); else f.c.forEach(walk); });
+  return { minL, maxL, minB, maxB };
+}
+function fitProj(features){
+  const b = boundsOf(features);
+  const sL = (b.maxL - b.minL) || 1, sB = (b.maxB - b.minB) || 1, pad = 0.09;
+  const L0 = b.minL - sL * pad, L1 = b.maxL + sL * pad, B0 = b.minB - sB * pad, B1 = b.maxB + sB * pad;
+  const W = 1000, H = 660, scale = Math.min(W / (L1 - L0), H / (B1 - B0));
+  const ox = (W - (L1 - L0) * scale) / 2, oy = (H - (B1 - B0) * scale) / 2;
+  return { MW: W, MH: H, px: lng => ox + (lng - L0) * scale, py: lat => oy + (B1 - lat) * scale };
+}
+
+function ringPath(ring){
+  if(!ring.length) return '';
+  let d = 'M';
+  for(let i = 0; i < ring.length; i++) d += (i ? 'L' : '') + PX(ring[i][0]).toFixed(1) + ' ' + PY(ring[i][1]).toFixed(1);
+  return d + 'Z';
+}
+function pathD(f){
+  let d = '';
+  if(f.t === 'Polygon') f.c.forEach(r => d += ringPath(r));
+  else f.c.forEach(poly => poly.forEach(r => d += ringPath(r)));
+  return d;
+}
+function roseFill(n){
+  if(n <= 1) return '#f3b2c2';
+  if(n <= 2) return '#e88ba3';
+  return '#d96386';
+}
+/* 心形回忆图标:放大并锚定在城市坐标点上(数量越多越大) */
+function heartIcon(cx, cy, n){
+  const k = 1.15 + Math.min(0.6, (n - 1) * 0.16);
+  return '<g transform="translate(' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ') scale(' + k.toFixed(2) + ')">' +
+    '<path d="M0 7 C -10 -3 -10 -13 0 -6 C 10 -13 10 -3 0 7 Z" fill="#e0708f" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"></path>' +
+    '</g>';
+}
+function svgMarkup(paths, labels, icons){
+  return '<svg viewBox="0 0 ' + MW + ' ' + MH + '" preserveAspectRatio="xMidYMid meet" class="geo-svg" fill-rule="evenodd">' + paths + (icons || '') + labels + '</svg>';
+}
+function renderProvinceSvg(){
+  setProj(chinaProj());
+  const feats = GEO().provinces;
+  const counts = {};
+  SITE.events.forEach(e => { if(e.province) counts[e.province] = (counts[e.province] || 0) + 1; });
+  let paths = '', labels = '', icons = '';
+  feats.forEach(f => {
+    const n = counts[f.n] || 0;
+    const lx = PX(f.p[0]), ly = PY(f.p[1]);
+    paths += '<path class="geo" data-name="' + esc(f.n) + '" data-count="' + n + '" d="' + pathD(f) + '" fill="' + (n ? roseFill(n) : '#faf5f7') + '"></path>';
+    if(n){
+      icons += heartIcon(lx, ly - 3, n);
+      labels += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 17).toFixed(1) + '" class="geo-label lit">' + esc(f.n) + '</text>';
+    } else {
+      labels += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" class="geo-label">' + esc(f.n) + '</text>';
+    }
+  });
+  document.getElementById('map').innerHTML = svgMarkup(paths, labels, icons);
+}
+function renderCitySvg(){
+  const feats = GEO().children[curAdcode] || [];
+  setProj(fitProj(feats));
+  const counts = {};
+  SITE.events.forEach(e => { if(e.province === curProvince && e.city) counts[e.city] = (counts[e.city] || 0) + 1; });
+  let paths = '', labels = '', icons = '';
+  feats.forEach(f => {
+    const n = counts[f.n] || 0;
+    const lx = PX(f.p[0]), ly = PY(f.p[1]);
+    paths += '<path class="geo" data-name="' + esc(f.n) + '" data-count="' + n + '" d="' + pathD(f) + '" fill="' + (n ? roseFill(n) : '#fbf8f9') + '"></path>';
+    if(n){
+      icons += heartIcon(lx, ly - 3, n);
+      labels += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 17).toFixed(1) + '" class="geo-label lit">' + esc(f.n) + '</text>';
+    } else {
+      labels += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" class="geo-label">' + esc(f.n) + '</text>';
+    }
+  });
+  document.getElementById('map').innerHTML = svgMarkup(paths, labels, icons);
+}
+
+function renderMap(){
+  const el = document.getElementById('map');
+  el.classList.remove('map-fallback');
+  if(!window.CHINA_GEO || !window.CHINA_GEO.provinces){ mapFallback(); return; }
+  mapLevel = 'china'; curProvince = ''; curAdcode = '';
+  updateCrumbs();
+  renderProvinceSvg();
+}
+function mapFallback(){
+  const el = document.getElementById('map');
+  el.classList.add('map-fallback');
+  el.innerHTML = '<div class="big">🗺️</div><div>地图数据未加载<br>请确认 china-geo.js 与 index.html 在同一目录</div>';
+}
+function onChinaClick(name){
+  const prov = PROVINCES.find(x => x.name === name);
+  if(!prov || MUNICIPALITIES.includes(name)){ showMemories(name, ''); return; }
+  drillToProvince(name, prov.adcode);
+}
+function drillToProvince(name, adcode){
+  const kids = GEO().children[adcode] || [];
+  if(!kids.length){ showMemories(name, ''); return; }
+  mapLevel = 'city'; curProvince = name; curAdcode = adcode;
+  updateCrumbs();
+  renderCitySvg();
+}
+function onCityClick(name){ showMemories(curProvince, name); }
+
+function updateCrumbs(){
+  document.getElementById('backBtn').hidden = mapLevel === 'china';
+  document.getElementById('crumbChina').classList.toggle('active', mapLevel === 'china');
+  const prov = document.getElementById('crumbProv');
+  const sep = document.getElementById('crumbSep');
+  prov.hidden = mapLevel === 'china';
+  sep.hidden = mapLevel === 'china';
+  prov.textContent = mapLevel === 'city' ? curProvince : '';
+}
+document.getElementById('backBtn').addEventListener('click', () => { document.getElementById('memPanel').hidden = true; renderMap(); });
+
+/* 地图交互(点击下钻 / 悬停提示) */
+const mapEl = document.getElementById('map');
+const mapTip = document.getElementById('mapTip');
+mapEl.addEventListener('click', e => {
+  const t = e.target.closest('[data-name]');
+  if(!t) return;
+  if(mapLevel === 'china') onChinaClick(t.dataset.name); else onCityClick(t.dataset.name);
+});
+mapEl.addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-name]');
+  if(!t){ mapTip.hidden = true; return; }
+  const n = parseInt(t.getAttribute('data-count') || '0', 10);
+  mapTip.textContent = t.dataset.name + (n ? ' · ' + n + ' 条回忆' : ' · 暂无回忆');
+  mapTip.hidden = false;
+  const r = document.querySelector('.map-shell').getBoundingClientRect();
+  mapTip.style.left = (e.clientX - r.left + 14) + 'px';
+  mapTip.style.top = (e.clientY - r.top + 12) + 'px';
+});
+mapEl.addEventListener('mouseleave', () => { mapTip.hidden = true; });
+mapEl.addEventListener('dblclick', e => {
+  if(mapLevel !== 'city') return;
+  const t = e.target.closest('[data-name]');
+  if(!t) return;
+  openAddMemory(curProvince, t.dataset.name);
+});
+
+function memCardHTML(e){
+  const imgs = (e.images || []).filter(Boolean);
+  const img = imgs.length ? '<img src="' + esc(imgs[0]) + '" loading="lazy" onerror="this.remove()">' : '';
+  const badge = imgs.length > 1 ? '<span class="mem-n">' + imgs.length + ' 张</span>' : '';
+  return '<div class="mem-card"><div class="pic"><div class="ph">' + esc(e.motif || '💌') + '</div>' + img + '</div>' +
+    '<div><div class="mt">' + esc(e.title) + badge + '</div>' +
+    (e.date ? '<div class="md">' + esc(e.date) + '</div>' : '') +
+    (e.text ? '<div class="mtxt">' + esc(e.text) + '</div>' : '') + '</div></div>';
+}
+function showMemories(province, city){
+  _memLoc = { province, city };
+  const list = SITE.events.filter(e => e.province === province && (!city || e.city === city));
+  document.getElementById('memTitle').textContent = '📍 ' + (city || province);
+  document.getElementById('memCount').textContent = list.length + ' 条回忆';
+  document.getElementById('memList').innerHTML = list.length
+    ? list.map(memCardHTML).join('')
+    : '<div class="empty-hint">这里还没有回忆 · 点右上「＋ 添加回忆」或双击地图上的城市</div>';
+  document.getElementById('memPanel').hidden = false;
+}
+document.getElementById('memClose').addEventListener('click', () => document.getElementById('memPanel').hidden = true);
+document.getElementById('memOverlay').addEventListener('click', () => document.getElementById('memPanel').hidden = true);
+document.getElementById('memAdd').addEventListener('click', () => openAddMemory(_memLoc.province, _memLoc.city));
+
+/* =====================================================================
+   快速添加回忆(双击城市 / 面板「＋」)
+   ===================================================================== */
+function openAddMemory(province, city){
+  _memLoc = { province, city };
+  _addImgs = [];
+  document.getElementById('addLoc').textContent = '📍 ' + (province || '') + (province && city ? ' · ' + city : '');
+  val('addInTitle',''); val('addInDate',''); val('addInTag',''); val('addInText','');
+  renderAddImgs();
+  document.getElementById('memPanel').hidden = true;
+  document.getElementById('addModal').hidden = false;
+}
+function closeAddMemory(){
+  document.getElementById('addModal').hidden = true;
+  _imgHandler = null;
+}
+function renderAddImgs(){
+  document.getElementById('addImgs').innerHTML = _addImgs.map((u, i) =>
+    '<div class="ed-img"><img src="' + esc(u) + '"><button class="ed-img-x" data-act="addimgdel" data-idx="' + i + '">×</button></div>'
+  ).join('');
+}
+function saveAddMemory(){
+  const title = val('addInTitle').trim();
+  if(!title){ alert('先给回忆起个标题吧'); return; }
+  SITE.events.push({
+    id:'e' + Date.now(), date:val('addInDate').trim(), tag:val('addInTag').trim(), title,
+    text:val('addInText').trim(), province:_memLoc.province, city:_memLoc.city, images:_addImgs.slice(), motif:'💌'
+  });
+  saveSite();
+  const wasCity = mapLevel === 'city', pv = curProvince, ad = curAdcode;
+  renderAll();
+  if(wasCity) drillToProvince(pv, ad);
+  closeAddMemory();
+  showMemories(_memLoc.province, _memLoc.city);
+}
+document.getElementById('addClose').addEventListener('click', closeAddMemory);
+document.getElementById('addCancel').addEventListener('click', closeAddMemory);
+document.getElementById('addOverlay').addEventListener('click', closeAddMemory);
+document.getElementById('addSave').addEventListener('click', saveAddMemory);
+document.getElementById('addImgBtn').addEventListener('click', () => {
+  _imgHandler = b64s => { _addImgs = _addImgs.concat(b64s); renderAddImgs(); };
+  val('fileInput',''); document.getElementById('fileInput').click();
+});
+document.getElementById('addImgs').addEventListener('click', e => {
+  const b = e.target.closest('[data-act="addimgdel"]');
+  if(!b) return;
+  _addImgs.splice(+b.dataset.idx, 1); renderAddImgs();
+});
+
+function renderAll(){ renderHero(); renderTimeline(); renderMap(); setupReveal(); renderLoginAlbum(); }
+
+/* 模式切换 */
+function applyMode(){
+  document.getElementById('mode-map').hidden = mode !== 'map';
+  document.getElementById('mode-timeline').hidden = mode !== 'timeline';
+  document.getElementById('segMap').classList.toggle('active', mode === 'map');
+  document.getElementById('segTimeline').classList.toggle('active', mode === 'timeline');
+}
+document.getElementById('segMap').addEventListener('click', () => { mode = 'map'; applyMode(); });
+document.getElementById('segTimeline').addEventListener('click', () => { mode = 'timeline'; applyMode(); });
+
+/* 计数器 */
+let START = new Date(SITE.startDate + 'T00:00:00');
+function pad(n){ return String(n).padStart(2,'0'); }
+function updateCounter(){
+  const now = new Date(); const ms = now - START; if(ms < 0) return;
+  const totalDays = Math.floor(ms / 86400000);
+  const h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+  let y = now.getFullYear() - START.getFullYear(), mo = now.getMonth() - START.getMonth(), d = now.getDate() - START.getDate();
+  if(d < 0){ mo--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if(mo < 0){ y--; mo += 12; }
+  document.getElementById('dayNum').textContent = totalDays.toLocaleString();
+  document.getElementById('dayLive').textContent = '已经一起走过 ' + y + ' 年 ' + mo + ' 个月 ' + d + ' 天 · ' + pad(h) + ':' + pad(m) + ':' + pad(s);
+}
+
+/* 进入动画 */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('is-visible'); io.unobserve(e.target); } });
+}, { threshold:.12 });
+function setupReveal(){ document.querySelectorAll('.reveal:not(.is-visible)').forEach(el => io.observe(el)); }
+
+/* =====================================================================
+   登录
+   ===================================================================== */
+let authed = sessionStorage.getItem('love-authed') === '1';
+const loginScreen = document.getElementById('loginScreen');
+const app = document.getElementById('app');
+
+function renderAuthForm(){
+  const h = adminHash();
+  document.getElementById('loginForm').hidden = !h;
+  document.getElementById('setupForm').hidden = !!h;
+  document.getElementById('loginHint').textContent = h ? '请输入密码' : '首次使用,请先设置访问密码';
+  document.getElementById('loginErr').textContent = '';
+  val('loginPw',''); val('setupPw1',''); val('setupPw2','');
+  _pin = ''; val('loginPwText',''); kbMode(false); pinRender();
+}
+function setLoginErr(msg){ document.getElementById('loginErr').textContent = msg; }
+
+document.getElementById('loginForm').addEventListener('submit', e => {
+  e.preventDefault();
+  if(hashPw(val('loginPw')) === adminHash()){ enterApp(); }
+  else setLoginErr('密码不对哦');
+});
+document.getElementById('setupForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const a = val('setupPw1'), b = val('setupPw2');
+  if(!/^[0-9]+$/.test(a)){ setLoginErr('密码请只用数字'); return; }
+  if(a.length < 4){ setLoginErr('密码至少 4 位'); return; }
+  if(a !== b){ setLoginErr('两次输入不一致'); return; }
+  try{ localStorage.setItem('love-admin', hashPw(a)); }catch(e){}
+  enterApp();
+});
+
+/* 拨号式密码键盘 */
+let _pin = '';
+function pinRender(){
+  const el = document.getElementById('loginDisplay');
+  el.innerHTML = _pin ? '<span style="letter-spacing:10px">' + '•'.repeat(_pin.length) + '</span>'
+                      : '<span class="pin-hint">输入密码</span>';
+  val('loginPw', _pin);
+}
+function pinAppend(k){
+  setLoginErr('');
+  if(k === 'clear'){ _pin = ''; }
+  else if(k === 'del'){ _pin = _pin.slice(0, -1); }
+  else if(/^[0-9]$/.test(k) && _pin.length < 12){ _pin += k; }
+  pinRender();
+}
+function kbMode(useKeyboard){
+  document.getElementById('loginKeypad').hidden = useKeyboard;
+  document.getElementById('loginPwText').hidden = !useKeyboard;
+  document.getElementById('loginDisplay').hidden = useKeyboard;
+  document.getElementById('kbToggle').textContent = useKeyboard ? '🔢 使用拨号键盘' : '⌨ 使用键盘输入';
+  if(useKeyboard){ val('loginPwText', _pin); document.getElementById('loginPwText').focus(); }
+}
+document.getElementById('loginKeypad').addEventListener('click', e => {
+  const b = e.target.closest('.key');
+  if(b) pinAppend(b.getAttribute('data-k'));
+});
+document.getElementById('kbToggle').addEventListener('click', () => kbMode(document.getElementById('loginPwText').hidden));
+document.getElementById('loginPwText').addEventListener('input', e => {
+  _pin = e.target.value.replace(/\D/g, '').slice(0, 12);
+  val('loginPw', _pin);
+  setLoginErr('');
+});
+
+function enterApp(){
+  authed = true;
+  try{ sessionStorage.setItem('love-authed','1'); }catch(e){}
+  loginScreen.hidden = true;
+  app.hidden = false;
+  renderAll(); applyMode();
+}
+function showLogin(){
+  authed = false;
+  try{ sessionStorage.removeItem('love-authed'); }catch(e){}
+  app.hidden = true;
+  loginScreen.hidden = false;
+  renderAuthForm();
+  renderLoginAlbum();
+}
+document.getElementById('logoutBtn').addEventListener('click', showLogin);
+
+/* 登录页右侧相册(内容全部来自自定义事件 + 跟随鼠标 3D 晃动) */
+const ALBUM_SLOTS = [
+  [16,16,-7,10],[50,10,5,45],[84,18,-3,20],
+  [18,50,4,55],[50,47,-6,20],[82,52,6,35],
+  [28,84,-5,15],[58,82,3,45],[85,86,-2,25]
+];
+function albumCardHTML(e, i){
+  const imgs = (e.images || []).filter(Boolean);
+  const media = imgs.length
+    ? '<img src="' + esc(imgs[0]) + '" alt="" class="pc-img">'
+    : '<div class="pc-img pc-ph">' + esc(e.motif || '💌') + '</div>';
+  const sub = [e.date, [e.province, e.city].filter(Boolean).join(' · ')].filter(Boolean).join(' · ');
+  const s = ALBUM_SLOTS[i];
+  return '<div class="album-card" style="--x:' + s[0] + '%;--y:' + s[1] + '%;--rot:' + s[2] + 'deg;--z:' + s[3] + 'px">' + media +
+    '<div class="pc-cap"><div class="pc-t">' + esc(e.title) + '</div>' +
+    (sub ? '<div class="pc-s">' + esc(sub) + '</div>' : '') + '</div></div>';
+}
+function renderLoginCover(){
+  const cover = document.getElementById('loginCover');
+  let src = SITE.loginAvatar || '';
+  if(!src){
+    const evs = SITE.events.slice().reverse();
+    for(const e of evs){
+      const imgs = (e.images || []).filter(Boolean);
+      if(imgs.length){ src = imgs[0]; break; }
+    }
+  }
+  if(src){
+    cover.hidden = false;
+    cover.innerHTML = '<img src="' + esc(src) + '" alt="">';
+  } else {
+    cover.hidden = true;
+    cover.innerHTML = '';
+  }
+}
+function renderLoginAlbum(){
+  renderLoginCover();
+  const box = document.getElementById('loginAlbum');
+  const evs = SITE.events.slice(-ALBUM_SLOTS.length);
+  if(!evs.length){
+    box.innerHTML = '<div class="album-card" style="--x:50%;--y:50%;--rot:-3deg;--z:0px"><div class="pc-img pc-ph">💌</div><div class="pc-cap"><div class="pc-t">还没有回忆</div><div class="pc-s">登录后开始记录你们的瞬间</div></div></div>';
+    return;
+  }
+  box.innerHTML = evs.map(albumCardHTML).join('');
+}
+document.getElementById('loginShow').addEventListener('mousemove', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width - 0.5;
+  const y = (e.clientY - r.top) / r.height - 0.5;
+  document.getElementById('loginAlbum').style.transform =
+    'rotateY(' + (x * 12).toFixed(2) + 'deg) rotateX(' + (-y * 12).toFixed(2) + 'deg)';
+});
+document.getElementById('loginShow').addEventListener('mouseleave', () => {
+  document.getElementById('loginAlbum').style.transform = 'rotateY(0deg) rotateX(0deg)';
+});
+
+/* =====================================================================
+   管理后台
+   ===================================================================== */
+let _tab = 'events', _imgHandler = null, _memLoc = { province:'', city:'' }, _addImgs = [];
+const admin = document.getElementById('admin');
+const adminPanel = admin.querySelector('.admin-panel');
+
+function openAdmin(){ admin.classList.add('open'); renderEditor(); }
+function closeAdmin(){ admin.classList.remove('open'); }
+
+function switchTab(t){
+  _tab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+  document.getElementById('tab-events').hidden = t !== 'events';
+  document.getElementById('tab-settings').hidden = t !== 'settings';
+  if(t === 'events') renderEvList();
+  if(t === 'settings') syncSettings();
+}
+function renderEditor(){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === _tab));
+  switchTab(_tab);
+}
+
+function provinceOptionsHTML(sel){
+  let h = '<option value="">— 选择省份 —</option>';
+  PROVINCES.forEach(p => { h += '<option value="' + esc(p.name) + '"' + (p.name === sel ? ' selected' : '') + '>' + esc(p.name) + '</option>'; });
+  return h;
+}
+function evImgsHTML(e){
+  const imgs = (e.images || []).filter(Boolean);
+  if(!imgs.length) return '<div class="ed-hint">还没有照片 · 点下方「＋ 添加照片」</div>';
+  return '<div class="ed-imgs">' + imgs.map((u, i) =>
+    '<div class="ed-img"><img src="' + esc(u) + '" onerror="this.remove()"><button class="ed-img-x" data-act="imgdel" data-idx="' + i + '">×</button></div>'
+  ).join('') + '</div>';
+}
+function evEditHTML(e, i){
+  return '<div class="ed-item" data-id="' + e.id + '">' +
+    '<div class="ed-head"><span class="ed-idx">回忆 ' + (i+1) + '</span>' +
+    '<button class="btn ghost sm" data-act="del" style="color:var(--rose-deep)">删除</button></div>' +
+    evImgsHTML(e) +
+    '<button class="btn ghost sm" data-act="imgadd">＋ 添加照片(可多张)</button>' +
+    '<label>日期(时间线用)<input data-id="' + e.id + '" data-field="date" value="' + esc(e.date) + '" placeholder="如 2023.05.20"></label>' +
+    '<label>标签<input data-id="' + e.id + '" data-field="tag" value="' + esc(e.tag) + '" placeholder="如 はじまり · 相遇"></label>' +
+    '<label>标题<input data-id="' + e.id + '" data-field="title" value="' + esc(e.title) + '"></label>' +
+    '<label>省(地图用)<select data-id="' + e.id + '" data-field="province">' + provinceOptionsHTML(e.province) + '</select></label>' +
+    '<label>市 / 区(地图用)<input data-id="' + e.id + '" data-field="city" list="cityDatalist" value="' + esc(e.city) + '" placeholder="如 深圳市(直辖市可留空)"></label>' +
+    '<label>文字<textarea data-id="' + e.id + '" data-field="text">' + esc(e.text) + '</textarea></label>' +
+    '</div>';
+}
+function renderEvList(){ document.getElementById('evList').innerHTML = SITE.events.map(evEditHTML).join(''); }
+
+function populateCityDatalist(provinceName){
+  const dl = document.getElementById('cityDatalist');
+  if(!provinceName || !window.CHINA_GEO){ dl.innerHTML = ''; return; }
+  const prov = PROVINCES.find(p => p.name === provinceName);
+  if(!prov){ dl.innerHTML = ''; return; }
+  const kids = (window.CHINA_GEO.children && window.CHINA_GEO.children[prov.adcode]) || [];
+  dl.innerHTML = kids.map(f => '<option value="' + esc(f.n) + '">').join('');
+}
+
+function syncSettings(){
+  val('set-start', SITE.startDate);
+  val('set-you', SITE.names.you);
+  val('set-ta', SITE.names.ta);
+  val('set-titleEn', SITE.titleEn);
+  val('set-title', SITE.title);
+  val('set-title2', SITE.title2);
+  val('set-tagline', SITE.tagline);
+  renderAvatarPreview();
+}
+function renderAvatarPreview(){
+  const p = document.getElementById('set-avatar-preview');
+  p.innerHTML = SITE.loginAvatar ? '<img src="' + esc(SITE.loginAvatar) + '" style="width:100%;height:100%;object-fit:cover;display:block">' : '';
+}
+function syncSettingsToSite(){
+  SITE.startDate = val('set-start');
+  SITE.names.you = val('set-you') || '你';
+  SITE.names.ta = val('set-ta') || 'TA';
+  SITE.titleEn = val('set-titleEn');
+  SITE.title = val('set-title');
+  SITE.title2 = val('set-title2');
+  SITE.tagline = val('set-tagline');
+}
+
+function onFieldInput(e){
+  const t = e.target, id = t.dataset.id, field = t.dataset.field;
+  if(!id || !field) return;
+  const item = SITE.events.find(x => x.id === id); if(!item) return;
+  item[field] = t.value;
+  if(field === 'province') populateCityDatalist(t.value);
+}
+adminPanel.addEventListener('input', onFieldInput);
+adminPanel.addEventListener('change', onFieldInput);
+document.getElementById('tab-settings').addEventListener('input', e => {
+  if(e.target.id !== 'set-pw') syncSettingsToSite();
+});
+
+adminPanel.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if(!btn) return;
+  const act = btn.dataset.act;
+  if(act === 'tab'){ switchTab(btn.dataset.tab); return; }
+  if(act === 'save'){ saveAndApply(); return; }
+  if(act === 'export'){ exportSite(); return; }
+  if(act === 'reset'){ resetAll(); return; }
+  if(act === 'add'){ addEvent(); return; }
+  if(act === 'avatar'){ _imgHandler = b64s => { if(b64s[0]){ SITE.loginAvatar = b64s[0]; renderAvatarPreview(); } }; val('fileInput',''); document.getElementById('fileInput').click(); return; }
+  if(act === 'avatarClear'){ SITE.loginAvatar = ''; renderAvatarPreview(); return; }
+  const itemEl = btn.closest('.ed-item');
+  if(itemEl) handleItemAct(act, itemEl.dataset.id, btn);
+});
+
+function handleItemAct(act, id, btn){
+  const idx = SITE.events.findIndex(x => x.id === id); if(idx < 0) return;
+  if(act === 'del'){ if(confirm('确定删除这条回忆吗?')){ SITE.events.splice(idx,1); renderEvList(); } }
+  else if(act === 'imgadd'){
+    _imgHandler = b64s => { const it = SITE.events.find(x => x.id === id); if(it){ it.images = (it.images || []).concat(b64s); renderEvList(); } };
+    val('fileInput',''); document.getElementById('fileInput').click();
+  }
+  else if(act === 'imgdel'){
+    const it = SITE.events[idx]; if(!it.images) return;
+    it.images.splice(+btn.dataset.idx, 1); renderEvList();
+  }
+}
+function addEvent(){
+  SITE.events.push({ id:'e' + Date.now(), date:'', tag:'', title:'新回忆', text:'', province:'', city:'', images:[], motif:'💌' });
+  renderEvList();
+}
+function saveAndApply(){
+  syncSettingsToSite();
+  const pw = val('set-pw');
+  if(pw){ if(pw.length < 4){ alert('密码至少 4 位'); return; } try{ localStorage.setItem('love-admin', hashPw(pw)); }catch(e){} }
+  START = new Date(SITE.startDate + 'T00:00:00');
+  saveSite(); renderAll(); closeAdmin(); updateCounter();
+  document.getElementById('memPanel').hidden = true;
+}
+function resetAll(){
+  if(!confirm('确定恢复默认内容吗?你填的内容会丢失。')) return;
+  try{ localStorage.removeItem('love-site'); localStorage.removeItem('love-admin'); }catch(e){}
+  SITE = JSON.parse(JSON.stringify(DEFAULT_SITE));
+  renderAll(); closeAdmin();
+}
+
+/* 图片上传(压缩 · 支持多张) */
+const fileInput = document.getElementById('fileInput');
+fileInput.addEventListener('change', () => {
+  const files = fileInput.files;
+  if(!files.length || !_imgHandler) return;
+  processFiles(files, b64s => { if(_imgHandler) _imgHandler(b64s); _imgHandler = null; });
+  fileInput.value = '';
+});
+function processFiles(files, cb){
+  const arr = Array.from(files), out = [];
+  let pending = arr.length;
+  if(!pending){ cb(out); return; }
+  arr.forEach(file => processImage(file, b64 => { if(b64) out.push(b64); if(--pending === 0) cb(out); }));
+}
+function processImage(file, cb){
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1200; let w = img.width, h = img.height;
+      if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { alert('有张图片格式无法读取,已跳过(请用 JPG / PNG)。'); cb(null); };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* 导出成品文件 */
+function exportSite(){
+  syncSettingsToSite(); saveSite();
+  const clone = document.documentElement.cloneNode(true);
+  clone.querySelector('#site-data').textContent = JSON.stringify(SITE).replace(/</g, '\\u003c');
+  clone.querySelector('#admin-config').textContent = JSON.stringify({ hash: adminHash() });
+  const geoSrc = clone.querySelector('#china-geo-src');
+  if(geoSrc && window.CHINA_GEO){
+    geoSrc.removeAttribute('src');
+    geoSrc.textContent = 'window.CHINA_GEO = ' + JSON.stringify(window.CHINA_GEO) + ';';
+  }
+  ['timeline','map','heroTitle','tagline','brand','topBrand','loginTitle','loginBrand','names','evList','memList','cityDatalist','mapTip','addImgs','loginAlbum'].forEach(id => {
+    const el = clone.querySelector('#' + id); if(el) el.innerHTML = '';
+  });
+  const dn = clone.querySelector('#dayNum'); if(dn) dn.textContent = '0';
+  const dl = clone.querySelector('#dayLive'); if(dl) dl.textContent = '';
+  const adm = clone.querySelector('#admin'); if(adm) adm.classList.remove('open');
+  const mp = clone.querySelector('#memPanel'); if(mp) mp.hidden = true;
+  const am = clone.querySelector('#addModal'); if(am) am.hidden = true;
+  const appEl = clone.querySelector('#app'); if(appEl) appEl.hidden = true;
+  const loginEl = clone.querySelector('#loginScreen'); if(loginEl) loginEl.hidden = false;
+  const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+  const blob = new Blob([html], { type:'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'love-story.html'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* =====================================================================
+   入口
+   ===================================================================== */
+document.getElementById('adminOpen').addEventListener('click', openAdmin);
+document.getElementById('adminClose').addEventListener('click', closeAdmin);
+document.getElementById('adminOverlay').addEventListener('click', closeAdmin);
+
+if(authed){ enterApp(); } else { showLogin(); }
+renderAuthForm();
+renderHero();
+renderLoginAlbum();
+updateCounter();
+setInterval(updateCounter, 1000);
+</script>
+</body>
+</html>
