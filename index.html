@@ -99,6 +99,55 @@ body{
 .icon-btn{ background:none; border:none; font-size:13px; color:var(--ink-soft); cursor:pointer; font-family:inherit; letter-spacing:.08em; }
 .icon-btn:hover{ color:var(--rose-deep); }
 
+/* 右上角纪念日卡片(自定义 · 支持多个) */
+.ann-widget{ position:absolute; top:70px; right:16px; z-index:1000; min-width:150px; max-width:232px;
+  background:rgba(255,255,255,.9); backdrop-filter:blur(8px); border:1px solid #f2d4dc; border-radius:12px;
+  box-shadow:0 12px 34px -16px rgba(140,70,90,.35); padding:12px 14px; pointer-events:none; }
+.ann-widget .aw-head{ font-size:11px; letter-spacing:.28em; color:var(--rose-deep); margin-bottom:8px; }
+.ann-item{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:3px 0; }
+.ann-item .an{ font-size:13px; color:var(--ink); white-space:nowrap; }
+.ann-item .ad{ font-size:12px; color:var(--rose-deep); font-feature-settings:"tnum"; white-space:nowrap; }
+.ann-item .ad.soon{ color:var(--gold); }
+@media (max-width:880px){ .ann-widget{ display:none; } }
+
+/* 可拖动的浮动卡片(随机回忆 + 情侣头像) */
+.float-card{ position:absolute; z-index:18; width:272px; background:rgba(255,255,255,.94); backdrop-filter:blur(10px);
+  border:1px solid #f2d4dc; border-radius:14px; box-shadow:0 18px 50px -20px rgba(120,60,80,.5); overflow:hidden;
+  user-select:none; -webkit-user-select:none; cursor:grab; transition:transform .18s ease-out; }
+.float-card.dragging{ cursor:grabbing; box-shadow:0 26px 64px -20px rgba(120,60,80,.68); animation-play-state:paused; }
+.float-card img{ -webkit-user-drag:none; }
+
+/* 随机回忆卡片:保持倾斜 + 可调晃动幅度(--sway 由 JS 设置) */
+#playerCard{ animation:cardSway 6s ease-in-out infinite; transform-origin:50% 50%; --sway:1.5deg; }
+@keyframes cardSway{ 0%,100%{ transform:rotate(calc(-4deg - var(--sway))); } 50%{ transform:rotate(calc(-4deg + var(--sway))); } }
+.fc-head{ display:flex; align-items:center; justify-content:space-between; padding:9px 14px;
+  background:linear-gradient(180deg,#fff8fb,#fff); border-bottom:1px solid #f7e6ec;
+  font-size:12px; letter-spacing:.16em; color:var(--rose-deep); }
+.fc-hint{ font-size:10px; color:var(--ink-faint); letter-spacing:.04em; }
+.fc-body{ padding:12px; }
+
+/* 随机回忆放映 */
+.player-pic{ position:relative; aspect-ratio:4/3; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#fceff3,#f4d7e1); margin-bottom:10px; }
+.player-pic .ph{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:2.4rem; opacity:.9; }
+.player-pic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.player-gallery{ display:grid; grid-template-columns:repeat(2,1fr); gap:4px; margin-bottom:10px; }
+.player-gal{ position:relative; aspect-ratio:4/3; border-radius:6px; overflow:hidden; background:#fceff3; }
+.player-gal img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+.player-date{ font-size:11px; color:var(--ink-faint); letter-spacing:.06em; }
+.player-title{ font-size:15px; font-weight:600; letter-spacing:.04em; margin-top:2px; }
+.player-text{ font-size:12px; color:var(--ink-soft); margin-top:4px; line-height:1.7; }
+
+/* 情侣头像 */
+.avatars-body{ display:flex; align-items:center; justify-content:center; gap:14px; padding:16px 12px; }
+.avt{ text-align:center; flex:1; min-width:0; }
+.avt img, .avt .avt-ph{ width:68px; height:68px; border-radius:50%; object-fit:cover; display:block; margin:0 auto;
+  background:#fceff3; border:3px solid #fff; box-shadow:0 8px 20px -8px rgba(140,70,90,.45); }
+.avt .avt-ph{ display:flex; align-items:center; justify-content:center; font-size:26px; background:linear-gradient(135deg,#fceff3,#f4d7e1); }
+.avt-name{ display:block; margin-top:7px; font-size:12px; color:var(--ink-soft); letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.avt-heart{ font-size:20px; color:var(--rose); flex:0 0 auto; }
+.avt-preview{ width:64px; height:64px; border-radius:50%; overflow:hidden; background:#fceff3; border:2px solid var(--paper-2); flex:0 0 auto; }
+.avt-preview img{ width:100%; height:100%; object-fit:cover; display:block; }
+
 /* ============ Hero ============ */
 .hero-compact{ text-align:left; padding:20px 28px 12px; max-width:1920px; margin:0 auto; }
 .hero-compact .brand{ font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; font-size:11px; letter-spacing:.4em; color:var(--sage); text-transform:uppercase; }
@@ -161,24 +210,31 @@ body{
 .geo:hover{ fill:#f5cdd7; }
 .geo-label{ fill:#8a747c; font-size:13px; text-anchor:middle; pointer-events:none; font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; paint-order:stroke; stroke:#ffffff; stroke-width:3px; stroke-linejoin:round; }
 .geo-label.lit{ fill:#d46482; font-weight:600; }
+.mem-pin{ pointer-events:none; filter:drop-shadow(0 4px 8px rgba(140,70,90,.28)); }
+.pin-count{ fill:#d46482; font-size:11px; font-family:"ZCOOL KuaiLe","YouYuan",sans-serif; letter-spacing:.02em; }
 .map-tip{ position:absolute; z-index:10; padding:6px 12px; background:rgba(255,255,255,.97); border:1px solid #f2d4dc; border-radius:4px; font-size:12px; color:#453b40; letter-spacing:.05em; pointer-events:none; white-space:nowrap; box-shadow:0 6px 16px -6px rgba(140,70,90,.32); }
 .map-fallback{ height:520px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--ink-soft); font-size:14px; text-align:center; padding:24px; }
 .map-fallback .big{ font-size:44px; }
 
 /* 城市回忆面板 */
 .mem-panel{ position:absolute; inset:0; z-index:20; }
-.mem-overlay{ position:absolute; inset:0; background:rgba(80,50,62,.26); backdrop-filter:blur(2px); }
-.mem-box{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(480px,90%); max-height:92%; overflow-y:auto; background:var(--cream); border-radius:10px; box-shadow:0 30px 80px -25px rgba(120,60,80,.55); padding:18px; }
-.mem-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.mem-overlay{ position:absolute; inset:0; background:transparent; }
+.mem-box{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(250px,92%); max-height:46%; overflow-y:auto; background:var(--cream); border-radius:10px; box-shadow:0 30px 80px -25px rgba(120,60,80,.55); padding:18px; }
+.mem-head{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
 .mem-title{ font-size:16px; font-weight:600; letter-spacing:.06em; }
 .mem-count{ font-size:12px; color:var(--ink-faint); }
 .mem-close{ background:none; border:none; font-size:24px; color:var(--ink-soft); cursor:pointer; line-height:1; }
-.mem-card{ display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--paper-2); }
-.mem-card .pic{ width:88px; aspect-ratio:4/3; border-radius:4px; flex:none; }
-.mem-card .pic .ph{ font-size:1.8rem; }
-.mem-card .mt{ font-size:15px; font-weight:600; }
-.mem-card .md{ font-size:12px; color:var(--ink-faint); margin-top:1px; }
-.mem-card .mtxt{ font-size:13px; color:var(--ink-soft); margin-top:3px; }
+.mem-card{ display:flex; flex-direction:column; gap:10px; padding:18px 0; border-top:1px solid var(--paper-2); }
+.mem-card .pic{ position:relative; width:100%; aspect-ratio:auto; min-height:80px; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#fceff3,#f4d7e1); }
+.mem-card .pic .ph{ position:static; display:flex; align-items:center; justify-content:center; min-height:150px; font-size:2.4rem; }
+.mem-card .pic img{ position:static; display:block; width:100%; height:auto; }
+.mem-title-row{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 10px; }
+.mem-card .mt{ font-size:18px; font-weight:600; }
+.mem-card .md{ font-size:13px; color:var(--ink-faint); }
+.mem-card .mtxt{ font-size:14px; color:var(--ink-soft); line-height:1.7; }
+.mem-gallery{ width:100%; display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:8px; }
+.mem-gallery .gal{ border-radius:8px; }
+.mem-card-actions{ display:flex; gap:6px; flex:none; }
 .mem-actions{ display:flex; align-items:center; gap:8px; flex:none; }
 .mem-add{ background:none; border:1px solid var(--ink-faint); border-radius:999px; padding:4px 12px; font-family:inherit; font-size:12px; color:var(--ink-soft); cursor:pointer; letter-spacing:.04em; }
 .mem-add:hover{ color:var(--rose-deep); border-color:var(--rose); }
@@ -327,6 +383,20 @@ body{
     </div>
   </header>
 
+  <aside class="ann-widget" id="annWidget" hidden></aside>
+
+  <!-- 随机回忆卡片(可拖动) -->
+  <div class="float-card" id="playerCard" hidden>
+    <div class="fc-head">📸 回忆放映 <span class="fc-hint">⠿ 拖动移动</span></div>
+    <div class="fc-body" id="playerBody"></div>
+  </div>
+
+  <!-- 情侣头像卡片(可拖动) -->
+  <div class="float-card" id="avatarsCard" hidden>
+    <div class="fc-head">👩‍❤️‍👨 我们 <span class="fc-hint">⠿ 拖动移动</span></div>
+    <div class="fc-body avatars-body" id="avatarsBody"></div>
+  </div>
+
   <section class="hero-compact">
     <div class="brand" id="brand"></div>
     <h1 id="heroTitle"></h1>
@@ -358,7 +428,7 @@ body{
         <!-- 城市回忆面板(跟随地图 · 居中) -->
         <div id="memPanel" class="mem-panel" hidden>
           <div class="mem-overlay" id="memOverlay"></div>
-          <div class="mem-box">
+          <div class="mem-box" id="memBox">
             <div class="mem-head">
               <div>
                 <div class="mem-title" id="memTitle"></div>
@@ -399,7 +469,7 @@ body{
   <div class="add-overlay" id="addOverlay"></div>
   <div class="add-card">
     <div class="add-head">
-      <div class="add-title">＋ 添加回忆</div>
+      <div class="add-title" id="addTitle">＋ 添加回忆</div>
       <button class="add-close" id="addClose">×</button>
     </div>
     <div class="add-loc" id="addLoc"></div>
@@ -462,13 +532,65 @@ body{
       </div>
       <div class="ed-hint" style="margin-top:8px">不设置时,自动用最新一条回忆的第一张照片。</div>
       <hr>
+      <label>情侣头像(可拖动卡片)</label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
+        <div class="avt-preview" id="set-you-avt-preview"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn sm" data-act="youavt">上传「你」的头像</button>
+          <button class="btn ghost sm" data-act="youavtClear">清除</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+        <div class="avt-preview" id="set-ta-avt-preview"></div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button class="btn sm" data-act="taavt">上传「TA」的头像</button>
+          <button class="btn ghost sm" data-act="taavtClear">清除</button>
+        </div>
+      </div>
+      <div class="ed-hint" style="margin-top:8px">留空时显示爱心占位;卡片可拖到任意位置。</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);cursor:pointer"><input type="checkbox" id="set-showPlayer"> 显示随机回忆卡片</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);cursor:pointer"><input type="checkbox" id="set-showAvatars"> 显示情侣头像卡片</label>
+      </div>
+      <label>回忆卡片晃动幅度 <span id="playerSwayVal" style="color:var(--rose-deep)">1.5°</span></label>
+      <input type="range" id="set-playerSway" min="0" max="10" step="0.5" style="margin-top:6px;padding:0;border:none;accent-color:var(--rose-deep)">
+      <div class="ed-hint">0 为静止倾斜,数值越大摆动越明显。</div>
+      <label>头像卡片晃动幅度 <span id="avatarSwayVal" style="color:var(--rose-deep)">8°</span></label>
+      <input type="range" id="set-avatarSway" min="0" max="30" step="1" style="margin-top:6px;padding:0;border:none;accent-color:var(--rose-deep)">
+      <div class="ed-hint">0 为不晃动,数值越大鼠标划过时倾斜越明显。</div>
+      <hr>
+      <label>右上角 · 自定义纪念日</label>
+      <div class="ed-hint">填写名称与日期,显示在右上角卡片(支持多个,留空名称或日期则不显示)。</div>
+      <div id="annList"></div>
+      <button class="btn ghost sm" data-act="annadd">＋ 添加纪念日</button>
+      <hr>
       <label>修改访问密码(留空则不修改)</label>
       <input type="password" id="set-pw" autocomplete="new-password">
+      <label>修改管理员密码(留空则不修改)</label>
+      <input type="password" id="set-adminpw" autocomplete="new-password">
       <div class="row">
         <button class="btn rose" data-act="save">💾 保存并应用</button>
         <button class="btn" data-act="export">⬇ 导出成品文件</button>
         <button class="btn ghost" data-act="reset">↺ 恢复默认内容</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 管理员密码验证 -->
+<div id="adminPwModal" class="add-modal" hidden>
+  <div class="add-overlay" id="adminPwOverlay"></div>
+  <div class="add-card" style="width:min(380px,94vw)">
+    <div class="add-head">
+      <div class="add-title" id="adminPwTitle">请输入管理员密码</div>
+      <button class="add-close" id="adminPwClose">×</button>
+    </div>
+    <label class="add-field">管理员密码<input type="password" id="adminPwInput" autocomplete="off" inputmode="numeric"></label>
+    <label class="add-field" id="adminPwConfirmField" hidden>确认密码<input type="password" id="adminPwConfirm" autocomplete="off" inputmode="numeric"></label>
+    <div class="ed-hint" id="adminPwHint" style="margin-top:6px">管理员密码与访问密码是两套密码。</div>
+    <div class="add-actions">
+      <button class="btn ghost" id="adminPwCancel">取消</button>
+      <button class="btn rose" id="adminPwOk">进入管理后台</button>
     </div>
   </div>
 </div>
@@ -486,6 +608,16 @@ body{
   "titleEn": "OUR LOVE STORY",
   "tagline": "我们的恋爱日常 · 一起走过的每一天",
   "loginAvatar": "",
+  "youAvatar": "",
+  "taAvatar": "",
+  "showPlayer": true,
+  "showAvatars": true,
+  "playerSway": 1.5,
+  "avatarSway": 8,
+  "anniversaries": [
+    {"id":"a1","name":"在一起","date":"2023-05-20"},
+    {"id":"a2","name":"第一次旅行","date":"2024-02-14"}
+  ],
   "events": [
     {"id":"e1","date":"2023.05.20","tag":"はじまり · 相遇","title":"那天,靠窗的位置","text":"你在咖啡馆靠窗的位置看书,阳光落下来,我第一次知道什么叫「想认识一个人」。","province":"广东省","city":"深圳市","images":["https://images.pexels.com/photos/36557574/pexels-photo-36557574.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"☕"},
     {"id":"e2","date":"2023.06.10","tag":"初デート · 第一次约会","title":"散步到天黑","text":"看完展出来下了点小雨,你自然地走在了车流的那一侧。心跳声比雨还响。","province":"广东省","city":"深圳市","images":["https://images.pexels.com/photos/35748415/pexels-photo-35748415.jpeg?auto=compress&cs=tinysrgb&w=1200"],"motif":"🌿"},
@@ -499,7 +631,7 @@ body{
 }
 </script>
 
-<script type="application/json" id="admin-config">{"hash":""}</script>
+<script type="application/json" id="admin-config">{"hash":"","adminpw":""}</script>
 
 <script src="china-geo.js" id="china-geo-src"></script>
 <script>
@@ -542,6 +674,13 @@ function loadSite(){
   try{ const s = localStorage.getItem('love-site'); if(s) site = JSON.parse(s); }catch(e){}
   if(!site) site = JSON.parse(JSON.stringify(DEFAULT_SITE));
   (site.events || []).forEach(e => { if(!Array.isArray(e.images)) e.images = (e.img ? [e.img] : []); delete e.img; });
+  if(!Array.isArray(site.anniversaries)) site.anniversaries = [];
+  if(typeof site.showPlayer !== 'boolean') site.showPlayer = true;
+  if(typeof site.showAvatars !== 'boolean') site.showAvatars = true;
+  if(typeof site.youAvatar !== 'string') site.youAvatar = '';
+  if(typeof site.taAvatar !== 'string') site.taAvatar = '';
+  if(typeof site.avatarSway !== 'number') site.avatarSway = 8;
+  if(typeof site.playerSway !== 'number') site.playerSway = 1.5;
   return site;
 }
 function saveSite(){
@@ -595,9 +734,162 @@ function renderTimeline(){
 }
 
 /* =====================================================================
+   右上角 · 自定义纪念日
+   ===================================================================== */
+function annDate(d){
+  const m = String(d || '').match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/);
+  return m ? new Date(+m[1], +m[2]-1, +m[3]) : null;
+}
+let _annSig = '';
+function renderAnnWidget(){
+  const box = document.getElementById('annWidget');
+  const list = (SITE.anniversaries || []).filter(a => a.name && a.date);
+  if(!list.length){ box.hidden = true; box.innerHTML = ''; _annSig = ''; return; }
+  box.hidden = false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const html = '<div class="aw-head">📅 纪念日</div>' + list.map(a => {
+    const t = annDate(a.date);
+    let label, cls = '';
+    if(!t){ label = esc(a.date); }
+    else {
+      const days = Math.round((t - today) / 86400000);
+      if(days === 0){ label = '就是今天 🎉'; cls = 'soon'; }
+      else if(days > 0){ label = '还有 ' + days + ' 天'; cls = 'soon'; }
+      else { label = '已 ' + (-days) + ' 天'; }
+    }
+    return '<div class="ann-item"><span class="an">' + esc(a.name) + '</span><span class="ad ' + cls + '">' + label + '</span></div>';
+  }).join('');
+  if(html !== _annSig){ box.innerHTML = html; _annSig = html; }
+}
+
+/* =====================================================================
+   可拖动浮动卡片:随机回忆放映 + 情侣头像
+   ===================================================================== */
+const WIDGET_POS_KEY = 'love-widgets';
+function positionCard(id, pos){
+  const c = document.getElementById(id);
+  if(!c) return;
+  const w = c.offsetWidth || 272, h = c.offsetHeight || 120;
+  const dw = Math.max(w, document.documentElement.scrollWidth || document.body.scrollWidth || window.innerWidth);
+  const dh = Math.max(h, document.documentElement.scrollHeight || document.body.scrollHeight || window.innerHeight);
+  const x = Math.max(0, Math.min(pos.x, dw - w));
+  const y = Math.max(0, Math.min(pos.y, dh - h));
+  c.style.left = x + 'px'; c.style.top = y + 'px'; c.style.right = 'auto'; c.style.bottom = 'auto';
+}
+function initWidgetPos(){
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(WIDGET_POS_KEY) || '{}'); }catch(e){}
+  positionCard('playerCard', saved.player || { x: 20, y: 150 });
+  positionCard('avatarsCard', saved.avatars || { x: Math.max(20, window.innerWidth - 300), y: Math.max(150, window.innerHeight - 220) });
+}
+function saveWidgetPos(){
+  const out = {};
+  [['playerCard','player'],['avatarsCard','avatars']].forEach(pair => {
+    const c = document.getElementById(pair[0]);
+    if(c && !c.hidden) out[pair[1]] = { x: parseFloat(c.style.left) || 0, y: parseFloat(c.style.top) || 0 };
+  });
+  try{ localStorage.setItem(WIDGET_POS_KEY, JSON.stringify(out)); }catch(e){}
+}
+function makeDraggable(id){
+  const card = document.getElementById(id);
+  if(!card) return;
+  const start = e => {
+    e.preventDefault();
+    const px = (e.touches ? e.touches[0].clientX : e.clientX) + window.scrollX;
+    const py = (e.touches ? e.touches[0].clientY : e.clientY) + window.scrollY;
+    const baseX = parseFloat(card.style.left), baseY = parseFloat(card.style.top);
+    const sx = Number.isFinite(baseX) ? px - baseX : px - card.getBoundingClientRect().left;
+    const sy = Number.isFinite(baseY) ? py - baseY : py - card.getBoundingClientRect().top;
+    card.classList.add('dragging');
+    const move = ev => {
+      const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) + window.scrollX;
+      const cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) + window.scrollY;
+      const dw = document.documentElement.scrollWidth || document.body.scrollWidth || window.innerWidth;
+      const dh = document.documentElement.scrollHeight || document.body.scrollHeight || window.innerHeight;
+      const x = Math.max(0, Math.min(cx - sx, dw - card.offsetWidth));
+      const y = Math.max(0, Math.min(cy - sy, dh - card.offsetHeight));
+      card.style.left = x + 'px'; card.style.top = y + 'px'; card.style.right = 'auto'; card.style.bottom = 'auto';
+    };
+    const end = () => {
+      card.classList.remove('dragging');
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', end);
+      saveWidgetPos();
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchmove', move, { passive:false });
+    document.addEventListener('touchend', end);
+  };
+  card.addEventListener('mousedown', start);
+  card.addEventListener('touchstart', start, { passive:false });
+}
+
+/* 随机回忆放映 */
+let _playerIdx = -1, _playerTimer = null;
+function playerHTML(e){
+  const imgs = (e.images || []).filter(Boolean);
+  let media;
+  if(imgs.length === 1){
+    media = '<div class="player-pic"><div class="ph">' + esc(e.motif || '💌') + '</div><img src="' + esc(imgs[0]) + '" alt="" onerror="this.remove()" draggable="false"></div>';
+  } else if(imgs.length > 1){
+    media = '<div class="player-gallery">' + imgs.slice(0,4).map(u => '<div class="player-gal"><img src="' + esc(u) + '" alt="" onerror="this.remove()" draggable="false"></div>').join('') + '</div>';
+  } else {
+    media = '<div class="player-pic"><div class="ph">' + esc(e.motif || '💌') + '</div></div>';
+  }
+  return media +
+    (e.date ? '<div class="player-date">' + esc(e.date) + (e.tag ? ' · ' + esc(e.tag) : '') + '</div>' : '') +
+    '<div class="player-title">' + esc(e.title) + '</div>' +
+    (e.text ? '<div class="player-text">' + esc(e.text) + '</div>' : '');
+}
+function renderPlayer(){
+  const card = document.getElementById('playerCard');
+  if(!SITE.showPlayer || !SITE.events.length){ card.hidden = true; return; }
+  card.hidden = false;
+  let idx = Math.floor(Math.random() * SITE.events.length);
+  if(SITE.events.length > 1){ let guard = 0; while(idx === _playerIdx && guard++ < 20){ idx = Math.floor(Math.random() * SITE.events.length); } }
+  _playerIdx = idx;
+  document.getElementById('playerBody').innerHTML = playerHTML(SITE.events[idx]);
+}
+let _lastSway = null;
+function applyPlayerSway(){
+  const card = document.getElementById('playerCard');
+  const v = SITE.playerSway || 0;
+  card.style.setProperty('--sway', v + 'deg');
+  if(_lastSway !== v){
+    _lastSway = v;
+    card.style.animation = 'none';
+    void card.offsetWidth;
+    card.style.animation = '';
+  }
+}
+function startPlayerRotator(){
+  if(_playerTimer) clearInterval(_playerTimer);
+  _playerTimer = setInterval(renderPlayer, 5000);
+}
+
+/* 情侣头像 */
+function avtHTML(src, fallback){
+  return src ? '<img src="' + esc(src) + '" alt="" draggable="false">' : '<div class="avt-ph">' + (fallback || '💗') + '</div>';
+}
+function renderAvatars(){
+  const card = document.getElementById('avatarsCard');
+  if(!SITE.showAvatars){ card.hidden = true; document.getElementById('avatarsBody').innerHTML = ''; return; }
+  card.hidden = false;
+  document.getElementById('avatarsBody').innerHTML =
+    '<div class="avt">' + avtHTML(SITE.youAvatar, '💗') + '<span class="avt-name">' + esc(SITE.names.you) + '</span></div>' +
+    '<div class="avt-heart">♡</div>' +
+    '<div class="avt">' + avtHTML(SITE.taAvatar, '💗') + '<span class="avt-name">' + esc(SITE.names.ta) + '</span></div>';
+}
+function renderWidgets(){ renderAnnWidget(); renderPlayer(); renderAvatars(); applyPlayerSway(); initWidgetPos(); }
+
+/* =====================================================================
    地图(中国省市逐级下钻)
    ===================================================================== */
 let mapLevel = 'china', curProvince = '', curAdcode = '';
+let _pinDataList = [], _pinTimer = null, _iconPos = {};
 
 const GEO = () => window.CHINA_GEO || { provinces: [], children: {} };
 
@@ -651,46 +943,107 @@ function heartIcon(cx, cy, n){
     '<path d="M0 7 C -10 -3 -10 -13 0 -6 C 10 -13 10 -3 0 7 Z" fill="#e0708f" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round"></path>' +
     '</g>';
 }
+/* 该地点所有回忆的照片(用于随机回忆图片) */
+function locationImages(province, city){
+  const imgs = [];
+  SITE.events.forEach(e => {
+    if(e.province !== province) return;
+    if(city && e.city !== city) return;
+    (e.images || []).forEach(u => { if(u) imgs.push(u); });
+  });
+  return imgs;
+}
+function pinRot(seed){
+  let h = 5381; const s = String(seed);
+  for(let i=0;i<s.length;i++) h = ((h<<5)+h) ^ s.charCodeAt(i);
+  return ((h >>> 0) % 9) - 4;
+}
+/* 拍立得式照片图钉:锚定在城市点上,向上展开,带数量小标 */
+function photoPinHTML(cx, cy, img, n, rot, s){
+  s = s || 1;
+  const w = 46, h = 40, pad = 4, capH = 15;
+  const fw = w + pad*2, fh = h + pad*2 + capH;
+  const rx = -fw/2, ry = -fh;
+  return '<g class="mem-pin" transform="translate(' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ') rotate(' + rot + ') scale(' + s + ')">' +
+    '<rect x="' + rx + '" y="' + ry + '" width="' + fw + '" height="' + fh + '" rx="3" fill="#fffdfb" stroke="#f0d7de" stroke-width="1.2" opacity="0.98"></rect>' +
+    '<rect x="' + (rx+pad) + '" y="' + (ry+pad) + '" width="' + w + '" height="' + h + '" fill="#fbe6ee"></rect>' +
+    '<image x="' + (rx+pad) + '" y="' + (ry+pad) + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid slice" href="' + esc(img) + '" xlink:href="' + esc(img) + '"></image>' +
+    '<text x="0" y="' + (ry+fh-6) + '" text-anchor="middle" class="pin-count">♥' + (n>1?' '+n:'') + '</text>' +
+    '</g>';
+}
+/* 每隔几秒随机换一张该地点的照片 */
+function startPinRotator(){
+  if(_pinTimer) clearInterval(_pinTimer);
+  _pinTimer = setInterval(() => {
+    document.querySelectorAll('.mem-pin').forEach((g, i) => {
+      const d = _pinDataList[i];
+      if(!d || !d.images.length) return;
+      const img = g.querySelector('image');
+      if(!img) return;
+      const pick = d.images[Math.floor(Math.random() * d.images.length)];
+      img.setAttribute('href', pick);
+      img.setAttribute('xlink:href', pick);
+    });
+  }, 4000);
+}
 function svgMarkup(paths, labels, icons){
-  return '<svg viewBox="0 0 ' + MW + ' ' + MH + '" preserveAspectRatio="xMidYMid meet" class="geo-svg" fill-rule="evenodd">' + paths + (icons || '') + labels + '</svg>';
+  return '<svg viewBox="0 0 ' + MW + ' ' + MH + '" preserveAspectRatio="xMidYMid meet" class="geo-svg" fill-rule="evenodd">' + paths + labels + (icons || '') + '</svg>';
 }
 function renderProvinceSvg(){
   setProj(chinaProj());
   const feats = GEO().provinces;
   const counts = {};
   SITE.events.forEach(e => { if(e.province) counts[e.province] = (counts[e.province] || 0) + 1; });
+  _pinDataList = []; _iconPos = {};
   let paths = '', labels = '', icons = '';
   feats.forEach(f => {
     const n = counts[f.n] || 0;
     const lx = PX(f.p[0]), ly = PY(f.p[1]);
+    _iconPos[f.n] = { x: lx, y: ly };
     paths += '<path class="geo" data-name="' + esc(f.n) + '" data-count="' + n + '" d="' + pathD(f) + '" fill="' + (n ? roseFill(n) : '#faf5f7') + '"></path>';
     if(n){
-      icons += heartIcon(lx, ly - 3, n);
+      const imgs = locationImages(f.n, '');
+      if(imgs.length){
+        icons += photoPinHTML(lx, ly, imgs[Math.floor(Math.random()*imgs.length)], n, pinRot(f.n), 1);
+        _pinDataList.push({ images: imgs });
+      } else {
+        icons += heartIcon(lx, ly - 3, n);
+      }
       labels += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 17).toFixed(1) + '" class="geo-label lit">' + esc(f.n) + '</text>';
     } else {
       labels += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" class="geo-label">' + esc(f.n) + '</text>';
     }
   });
   document.getElementById('map').innerHTML = svgMarkup(paths, labels, icons);
+  startPinRotator();
 }
 function renderCitySvg(){
   const feats = GEO().children[curAdcode] || [];
   setProj(fitProj(feats));
   const counts = {};
   SITE.events.forEach(e => { if(e.province === curProvince && e.city) counts[e.city] = (counts[e.city] || 0) + 1; });
+  _pinDataList = []; _iconPos = {};
   let paths = '', labels = '', icons = '';
   feats.forEach(f => {
     const n = counts[f.n] || 0;
     const lx = PX(f.p[0]), ly = PY(f.p[1]);
+    _iconPos[f.n] = { x: lx, y: ly };
     paths += '<path class="geo" data-name="' + esc(f.n) + '" data-count="' + n + '" d="' + pathD(f) + '" fill="' + (n ? roseFill(n) : '#fbf8f9') + '"></path>';
     if(n){
-      icons += heartIcon(lx, ly - 3, n);
+      const imgs = locationImages(curProvince, f.n);
+      if(imgs.length){
+        icons += photoPinHTML(lx, ly, imgs[Math.floor(Math.random()*imgs.length)], n, pinRot(f.n), 0.8);
+        _pinDataList.push({ images: imgs });
+      } else {
+        icons += heartIcon(lx, ly - 3, n);
+      }
       labels += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 17).toFixed(1) + '" class="geo-label lit">' + esc(f.n) + '</text>';
     } else {
       labels += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" class="geo-label">' + esc(f.n) + '</text>';
     }
   });
   document.getElementById('map').innerHTML = svgMarkup(paths, labels, icons);
+  startPinRotator();
 }
 
 function renderMap(){
@@ -759,12 +1112,57 @@ mapEl.addEventListener('dblclick', e => {
 
 function memCardHTML(e){
   const imgs = (e.images || []).filter(Boolean);
-  const img = imgs.length ? '<img src="' + esc(imgs[0]) + '" loading="lazy" onerror="this.remove()">' : '';
   const badge = imgs.length > 1 ? '<span class="mem-n">' + imgs.length + ' 张</span>' : '';
-  return '<div class="mem-card"><div class="pic"><div class="ph">' + esc(e.motif || '💌') + '</div>' + img + '</div>' +
-    '<div><div class="mt">' + esc(e.title) + badge + '</div>' +
-    (e.date ? '<div class="md">' + esc(e.date) + '</div>' : '') +
-    (e.text ? '<div class="mtxt">' + esc(e.text) + '</div>' : '') + '</div></div>';
+  let media;
+  if(imgs.length === 1){
+    media = '<div class="pic"><img src="' + esc(imgs[0]) + '" loading="lazy" onerror="this.remove()"></div>';
+  } else if(imgs.length > 1){
+    media = '<div class="mem-gallery">' + imgs.map(u => '<div class="gal"><img src="' + esc(u) + '" loading="lazy" onerror="this.remove()"></div>').join('') + '</div>';
+  } else {
+    media = '<div class="pic"><div class="ph">' + esc(e.motif || '💌') + '</div></div>';
+  }
+  const actions = adminAuthed
+    ? '<div class="mem-card-actions"><button class="btn ghost sm" data-act="memedit" data-id="' + esc(e.id) + '">✏️ 编辑</button><button class="btn ghost sm" data-act="memdel" data-id="' + esc(e.id) + '" style="color:var(--rose-deep)">删除</button></div>'
+    : '';
+  return '<div class="mem-card" data-id="' + esc(e.id) + '">' + media +
+    '<div class="mem-title-row"><div class="mt">' + esc(e.title) + badge + '</div>' + actions + '</div>' +
+    (e.date ? '<div class="md">' + esc(e.date) + (e.tag ? ' · ' + esc(e.tag) : '') + '</div>' : '') +
+    (e.text ? '<div class="mtxt">' + esc(e.text) + '</div>' : '') + '</div>';
+}
+function iconToShell(name){
+  const p = _iconPos[name];
+  const svg = document.querySelector('#map svg.geo-svg');
+  const box = document.getElementById('memBox');
+  if(!p || !svg || !box) return null;
+  const vr = svg.getBoundingClientRect();
+  if(!vr.width || !vr.height) return null;
+  const scale = Math.min(vr.width / MW, vr.height / MH);
+  const ox = (vr.width - MW * scale) / 2;
+  const oy = (vr.height - MH * scale) / 2;
+  const parent = box.offsetParent || box.parentElement;
+  const pr = parent.getBoundingClientRect();
+  return { x: vr.left - pr.left + ox + p.x * scale, y: vr.top - pr.top + oy + p.y * scale };
+}
+function positionMemPanel(name){
+  const box = document.getElementById('memBox');
+  const shell = document.querySelector('.map-shell');
+  const pos = iconToShell(name);
+  if(!pos || !shell){
+    box.style.left = '50%'; box.style.top = '50%'; box.style.transform = 'translate(-50%,-50%)';
+    return;
+  }
+  const parent = box.offsetParent || box.parentElement;
+  const sw = parent.clientWidth, sh = parent.clientHeight;
+  const bw = box.offsetWidth, bh = box.offsetHeight;
+  const gap = 16, m = 8;
+  let left = pos.x + gap;
+  if(left + bw > sw - m) left = pos.x - bw - gap;
+  left = Math.max(m, Math.min(left, sw - bw - m));
+  let top = pos.y - bh / 2;
+  top = Math.max(m, Math.min(top, sh - bh - m));
+  box.style.left = left + 'px';
+  box.style.top = top + 'px';
+  box.style.transform = 'none';
 }
 function showMemories(province, city){
   _memLoc = { province, city };
@@ -775,17 +1173,39 @@ function showMemories(province, city){
     ? list.map(memCardHTML).join('')
     : '<div class="empty-hint">这里还没有回忆 · 点右上「＋ 添加回忆」或双击地图上的城市</div>';
   document.getElementById('memPanel').hidden = false;
+  positionMemPanel(city || province);
 }
 document.getElementById('memClose').addEventListener('click', () => document.getElementById('memPanel').hidden = true);
 document.getElementById('memOverlay').addEventListener('click', () => document.getElementById('memPanel').hidden = true);
 document.getElementById('memAdd').addEventListener('click', () => openAddMemory(_memLoc.province, _memLoc.city));
+function refreshMemories(){
+  const wasCity = mapLevel === 'city', pv = curProvince, ad = curAdcode;
+  const loc = { province: _memLoc.province, city: _memLoc.city };
+  renderAll();
+  if(wasCity) drillToProvince(pv, ad);
+  showMemories(loc.province, loc.city);
+}
+document.getElementById('memList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if(!btn) return;
+  const id = btn.dataset.id;
+  if(btn.dataset.act === 'memedit'){ openEditMemory(id); }
+  else if(btn.dataset.act === 'memdel'){
+    if(confirm('确定删除这条回忆吗?')){
+      SITE.events = SITE.events.filter(x => x.id !== id);
+      saveSite();
+      refreshMemories();
+    }
+  }
+});
 
 /* =====================================================================
    快速添加回忆(双击城市 / 面板「＋」)
    ===================================================================== */
 function openAddMemory(province, city){
   _memLoc = { province, city };
+  _editId = null;
   _addImgs = [];
+  document.getElementById('addTitle').textContent = '＋ 添加回忆';
   document.getElementById('addLoc').textContent = '📍 ' + (province || '') + (province && city ? ' · ' + city : '');
   val('addInTitle',''); val('addInDate',''); val('addInTag',''); val('addInText','');
   renderAddImgs();
@@ -796,6 +1216,18 @@ function closeAddMemory(){
   document.getElementById('addModal').hidden = true;
   _imgHandler = null;
 }
+function openEditMemory(id){
+  const e = SITE.events.find(x => x.id === id); if(!e) return;
+  _editId = id;
+  _memLoc = { province: e.province || '', city: e.city || '' };
+  _addImgs = (e.images || []).filter(Boolean).slice();
+  document.getElementById('addTitle').textContent = '✏️ 编辑回忆';
+  document.getElementById('addLoc').textContent = '📍 ' + (e.province || '') + (e.province && e.city ? ' · ' + e.city : '');
+  val('addInTitle', e.title); val('addInDate', e.date); val('addInTag', e.tag); val('addInText', e.text);
+  renderAddImgs();
+  document.getElementById('memPanel').hidden = true;
+  document.getElementById('addModal').hidden = false;
+}
 function renderAddImgs(){
   document.getElementById('addImgs').innerHTML = _addImgs.map((u, i) =>
     '<div class="ed-img"><img src="' + esc(u) + '"><button class="ed-img-x" data-act="addimgdel" data-idx="' + i + '">×</button></div>'
@@ -804,16 +1236,16 @@ function renderAddImgs(){
 function saveAddMemory(){
   const title = val('addInTitle').trim();
   if(!title){ alert('先给回忆起个标题吧'); return; }
-  SITE.events.push({
-    id:'e' + Date.now(), date:val('addInDate').trim(), tag:val('addInTag').trim(), title,
-    text:val('addInText').trim(), province:_memLoc.province, city:_memLoc.city, images:_addImgs.slice(), motif:'💌'
-  });
+  const data = { date:val('addInDate').trim(), tag:val('addInTag').trim(), title, text:val('addInText').trim(), province:_memLoc.province, city:_memLoc.city, images:_addImgs.slice() };
+  if(_editId){
+    const e = SITE.events.find(x => x.id === _editId);
+    if(e) Object.assign(e, data);
+  } else {
+    SITE.events.push(Object.assign({ id:'e' + Date.now(), motif:'💌' }, data));
+  }
   saveSite();
-  const wasCity = mapLevel === 'city', pv = curProvince, ad = curAdcode;
-  renderAll();
-  if(wasCity) drillToProvince(pv, ad);
   closeAddMemory();
-  showMemories(_memLoc.province, _memLoc.city);
+  refreshMemories();
 }
 document.getElementById('addClose').addEventListener('click', closeAddMemory);
 document.getElementById('addCancel').addEventListener('click', closeAddMemory);
@@ -829,7 +1261,7 @@ document.getElementById('addImgs').addEventListener('click', e => {
   _addImgs.splice(+b.dataset.idx, 1); renderAddImgs();
 });
 
-function renderAll(){ renderHero(); renderTimeline(); renderMap(); setupReveal(); renderLoginAlbum(); }
+function renderAll(){ renderHero(); renderTimeline(); renderMap(); setupReveal(); renderLoginAlbum(); renderWidgets(); }
 
 /* 模式切换 */
 function applyMode(){
@@ -853,6 +1285,7 @@ function updateCounter(){
   if(mo < 0){ y--; mo += 12; }
   document.getElementById('dayNum').textContent = totalDays.toLocaleString();
   document.getElementById('dayLive').textContent = '已经一起走过 ' + y + ' 年 ' + mo + ' 个月 ' + d + ' 天 · ' + pad(h) + ':' + pad(m) + ':' + pad(s);
+  renderAnnWidget();
 }
 
 /* 进入动画 */
@@ -865,6 +1298,7 @@ function setupReveal(){ document.querySelectorAll('.reveal:not(.is-visible)').fo
    登录
    ===================================================================== */
 let authed = sessionStorage.getItem('love-authed') === '1';
+let adminAuthed = sessionStorage.getItem('love-admin-authed') === '1';
 const loginScreen = document.getElementById('loginScreen');
 const app = document.getElementById('app');
 
@@ -936,7 +1370,8 @@ function enterApp(){
 }
 function showLogin(){
   authed = false;
-  try{ sessionStorage.removeItem('love-authed'); }catch(e){}
+  adminAuthed = false;
+  try{ sessionStorage.removeItem('love-authed'); sessionStorage.removeItem('love-admin-authed'); }catch(e){}
   app.hidden = true;
   loginScreen.hidden = false;
   renderAuthForm();
@@ -1003,12 +1438,47 @@ document.getElementById('loginShow').addEventListener('mouseleave', () => {
 /* =====================================================================
    管理后台
    ===================================================================== */
-let _tab = 'events', _imgHandler = null, _memLoc = { province:'', city:'' }, _addImgs = [];
+let _tab = 'events', _imgHandler = null, _memLoc = { province:'', city:'' }, _addImgs = [], _editId = null;
 const admin = document.getElementById('admin');
 const adminPanel = admin.querySelector('.admin-panel');
 
-function openAdmin(){ admin.classList.add('open'); renderEditor(); }
+function openAdmin(){
+  if(adminAuthed){ admin.classList.add('open'); renderEditor(); return; }
+  const has = !!adminPwHash();
+  document.getElementById('adminPwTitle').textContent = has ? '请输入管理员密码' : '首次进入,请设置管理员密码';
+  document.getElementById('adminPwConfirmField').hidden = has;
+  document.getElementById('adminPwHint').textContent = has ? '管理员密码与访问密码是两套密码。' : '设置一个独立的管理员密码(与访问密码分开)。';
+  val('adminPwInput',''); val('adminPwConfirm','');
+  document.getElementById('adminPwModal').hidden = false;
+  setTimeout(() => document.getElementById('adminPwInput').focus(), 0);
+}
 function closeAdmin(){ admin.classList.remove('open'); }
+function adminPwHash(){
+  try{ const h = localStorage.getItem('love-adminpw'); if(h) return h; }catch(e){}
+  try{ return JSON.parse(document.getElementById('admin-config').textContent).adminpw || ''; }catch(e){ return ''; }
+}
+function unlockAdmin(){
+  adminAuthed = true;
+  try{ sessionStorage.setItem('love-admin-authed','1'); }catch(e){}
+  document.getElementById('adminPwModal').hidden = true;
+  admin.classList.add('open'); renderEditor();
+  if(!document.getElementById('memPanel').hidden) showMemories(_memLoc.province, _memLoc.city);
+}
+function adminPwSubmit(){
+  const has = !!adminPwHash();
+  const pw = val('adminPwInput').trim();
+  if(has){
+    if(hashPw(pw) === adminPwHash()) unlockAdmin();
+    else alert('管理员密码不对哦');
+    return;
+  }
+  const c = val('adminPwConfirm').trim();
+  if(!/^[0-9]+$/.test(pw)){ alert('密码请只用数字'); return; }
+  if(pw.length < 4){ alert('密码至少 4 位'); return; }
+  if(pw !== c){ alert('两次输入不一致'); return; }
+  try{ localStorage.setItem('love-adminpw', hashPw(pw)); }catch(e){}
+  unlockAdmin();
+}
 
 function switchTab(t){
   _tab = t;
@@ -1069,10 +1539,32 @@ function syncSettings(){
   val('set-title2', SITE.title2);
   val('set-tagline', SITE.tagline);
   renderAvatarPreview();
+  renderYouAvtPreview();
+  renderTaAvtPreview();
+  document.getElementById('set-showPlayer').checked = SITE.showPlayer !== false;
+  document.getElementById('set-showAvatars').checked = SITE.showAvatars !== false;
+  val('set-playerSway', SITE.playerSway || 0);
+  document.getElementById('playerSwayVal').textContent = (SITE.playerSway || 0) + '°';
+  val('set-avatarSway', SITE.avatarSway || 0);
+  document.getElementById('avatarSwayVal').textContent = (SITE.avatarSway || 0) + '°';
+  renderAnnList();
 }
 function renderAvatarPreview(){
   const p = document.getElementById('set-avatar-preview');
   p.innerHTML = SITE.loginAvatar ? '<img src="' + esc(SITE.loginAvatar) + '" style="width:100%;height:100%;object-fit:cover;display:block">' : '';
+}
+function renderYouAvtPreview(){ document.getElementById('set-you-avt-preview').innerHTML = SITE.youAvatar ? '<img src="' + esc(SITE.youAvatar) + '">' : ''; }
+function renderTaAvtPreview(){ document.getElementById('set-ta-avt-preview').innerHTML = SITE.taAvatar ? '<img src="' + esc(SITE.taAvatar) + '">' : ''; }
+function annRowHTML(a, i){
+  return '<div class="ed-item" data-ann="' + esc(a.id) + '">' +
+    '<div class="ed-head"><span class="ed-idx">纪念日 ' + (i+1) + '</span>' +
+    '<button class="btn ghost sm" data-act="anndel" style="color:var(--rose-deep)">删除</button></div>' +
+    '<label>名称<input data-ann="' + esc(a.id) + '" data-field="name" value="' + esc(a.name) + '" placeholder="如 在一起 / 结婚纪念日"></label>' +
+    '<label>日期<input data-ann="' + esc(a.id) + '" data-field="date" type="date" value="' + esc(a.date) + '"></label>' +
+    '</div>';
+}
+function renderAnnList(){
+  document.getElementById('annList').innerHTML = (SITE.anniversaries || []).map(annRowHTML).join('');
 }
 function syncSettingsToSite(){
   SITE.startDate = val('set-start');
@@ -1082,6 +1574,10 @@ function syncSettingsToSite(){
   SITE.title = val('set-title');
   SITE.title2 = val('set-title2');
   SITE.tagline = val('set-tagline');
+  SITE.showPlayer = document.getElementById('set-showPlayer').checked;
+  SITE.showAvatars = document.getElementById('set-showAvatars').checked;
+  SITE.playerSway = +val('set-playerSway') || 0;
+  SITE.avatarSway = +val('set-avatarSway') || 0;
 }
 
 function onFieldInput(e){
@@ -1096,6 +1592,21 @@ adminPanel.addEventListener('change', onFieldInput);
 document.getElementById('tab-settings').addEventListener('input', e => {
   if(e.target.id !== 'set-pw') syncSettingsToSite();
 });
+document.getElementById('annList').addEventListener('input', e => {
+  const t = e.target, id = t.dataset.ann, field = t.dataset.field;
+  if(!id || !field) return;
+  const a = (SITE.anniversaries || []).find(x => x.id === id); if(!a) return;
+  a[field] = t.value;
+});
+document.getElementById('set-avatarSway').addEventListener('input', () => {
+  document.getElementById('avatarSwayVal').textContent = document.getElementById('set-avatarSway').value + '°';
+});
+document.getElementById('set-playerSway').addEventListener('input', () => {
+  const v = document.getElementById('set-playerSway').value;
+  document.getElementById('playerSwayVal').textContent = v + '°';
+  SITE.playerSway = +v || 0;
+  applyPlayerSway();
+});
 
 adminPanel.addEventListener('click', e => {
   const btn = e.target.closest('[data-act]'); if(!btn) return;
@@ -1107,6 +1618,12 @@ adminPanel.addEventListener('click', e => {
   if(act === 'add'){ addEvent(); return; }
   if(act === 'avatar'){ _imgHandler = b64s => { if(b64s[0]){ SITE.loginAvatar = b64s[0]; renderAvatarPreview(); } }; val('fileInput',''); document.getElementById('fileInput').click(); return; }
   if(act === 'avatarClear'){ SITE.loginAvatar = ''; renderAvatarPreview(); return; }
+  if(act === 'youavt'){ _imgHandler = b64s => { if(b64s[0]){ SITE.youAvatar = b64s[0]; renderYouAvtPreview(); } }; val('fileInput',''); document.getElementById('fileInput').click(); return; }
+  if(act === 'youavtClear'){ SITE.youAvatar = ''; renderYouAvtPreview(); return; }
+  if(act === 'taavt'){ _imgHandler = b64s => { if(b64s[0]){ SITE.taAvatar = b64s[0]; renderTaAvtPreview(); } }; val('fileInput',''); document.getElementById('fileInput').click(); return; }
+  if(act === 'taavtClear'){ SITE.taAvatar = ''; renderTaAvtPreview(); return; }
+  if(act === 'annadd'){ SITE.anniversaries = SITE.anniversaries || []; SITE.anniversaries.push({ id:'a' + Date.now(), name:'', date:'' }); renderAnnList(); return; }
+  if(act === 'anndel'){ const row = btn.closest('[data-ann]'); if(row){ SITE.anniversaries = (SITE.anniversaries || []).filter(a => a.id !== row.dataset.ann); renderAnnList(); } return; }
   const itemEl = btn.closest('.ed-item');
   if(itemEl) handleItemAct(act, itemEl.dataset.id, btn);
 });
@@ -1131,13 +1648,15 @@ function saveAndApply(){
   syncSettingsToSite();
   const pw = val('set-pw');
   if(pw){ if(pw.length < 4){ alert('密码至少 4 位'); return; } try{ localStorage.setItem('love-admin', hashPw(pw)); }catch(e){} }
+  const apw = val('set-adminpw');
+  if(apw){ if(apw.length < 4){ alert('管理员密码至少 4 位'); return; } try{ localStorage.setItem('love-adminpw', hashPw(apw)); }catch(e){} }
   START = new Date(SITE.startDate + 'T00:00:00');
   saveSite(); renderAll(); closeAdmin(); updateCounter();
   document.getElementById('memPanel').hidden = true;
 }
 function resetAll(){
   if(!confirm('确定恢复默认内容吗?你填的内容会丢失。')) return;
-  try{ localStorage.removeItem('love-site'); localStorage.removeItem('love-admin'); }catch(e){}
+  try{ localStorage.removeItem('love-site'); localStorage.removeItem('love-admin'); localStorage.removeItem('love-adminpw'); }catch(e){}
   SITE = JSON.parse(JSON.stringify(DEFAULT_SITE));
   renderAll(); closeAdmin();
 }
@@ -1178,13 +1697,13 @@ function exportSite(){
   syncSettingsToSite(); saveSite();
   const clone = document.documentElement.cloneNode(true);
   clone.querySelector('#site-data').textContent = JSON.stringify(SITE).replace(/</g, '\\u003c');
-  clone.querySelector('#admin-config').textContent = JSON.stringify({ hash: adminHash() });
+  clone.querySelector('#admin-config').textContent = JSON.stringify({ hash: adminHash(), adminpw: adminPwHash() });
   const geoSrc = clone.querySelector('#china-geo-src');
   if(geoSrc && window.CHINA_GEO){
     geoSrc.removeAttribute('src');
     geoSrc.textContent = 'window.CHINA_GEO = ' + JSON.stringify(window.CHINA_GEO) + ';';
   }
-  ['timeline','map','heroTitle','tagline','brand','topBrand','loginTitle','loginBrand','names','evList','memList','cityDatalist','mapTip','addImgs','loginAlbum'].forEach(id => {
+  ['timeline','map','heroTitle','tagline','brand','topBrand','loginTitle','loginBrand','names','evList','memList','cityDatalist','mapTip','addImgs','loginAlbum','playerBody','avatarsBody','annWidget'].forEach(id => {
     const el = clone.querySelector('#' + id); if(el) el.innerHTML = '';
   });
   const dn = clone.querySelector('#dayNum'); if(dn) dn.textContent = '0';
@@ -1207,6 +1726,11 @@ function exportSite(){
 document.getElementById('adminOpen').addEventListener('click', openAdmin);
 document.getElementById('adminClose').addEventListener('click', closeAdmin);
 document.getElementById('adminOverlay').addEventListener('click', closeAdmin);
+document.getElementById('adminPwOk').addEventListener('click', adminPwSubmit);
+document.getElementById('adminPwCancel').addEventListener('click', () => document.getElementById('adminPwModal').hidden = true);
+document.getElementById('adminPwClose').addEventListener('click', () => document.getElementById('adminPwModal').hidden = true);
+document.getElementById('adminPwOverlay').addEventListener('click', () => document.getElementById('adminPwModal').hidden = true);
+document.getElementById('adminPwModal').addEventListener('keydown', e => { if(e.key === 'Enter') adminPwSubmit(); });
 
 if(authed){ enterApp(); } else { showLogin(); }
 renderAuthForm();
@@ -1214,6 +1738,27 @@ renderHero();
 renderLoginAlbum();
 updateCounter();
 setInterval(updateCounter, 1000);
+
+makeDraggable('playerCard');
+makeDraggable('avatarsCard');
+startPlayerRotator();
+
+/* 情侣头像卡片:鼠标划过时跟随鼠标微微晃动 */
+(function(){
+  const card = document.getElementById('avatarsCard');
+  if(!card) return;
+  card.addEventListener('mousemove', e => {
+    if(card.classList.contains('dragging')) return;
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    const k = SITE.avatarSway || 0;
+    card.style.transform = 'perspective(600px) rotateY(' + (x * k).toFixed(2) + 'deg) rotateX(' + (-y * k).toFixed(2) + 'deg)';
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(600px) rotateX(0deg) rotateY(0deg)';
+  });
+})();
 </script>
 </body>
 </html>
