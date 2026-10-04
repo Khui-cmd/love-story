@@ -570,7 +570,6 @@ body{
       <input type="password" id="set-adminpw" autocomplete="new-password">
       <div class="row">
         <button class="btn rose" data-act="save">💾 保存并应用</button>
-        <button class="btn" data-act="export">⬇ 导出成品文件</button>
         <button class="btn ghost" data-act="reset">↺ 恢复默认内容</button>
       </div>
     </div>
@@ -598,7 +597,7 @@ body{
 <input type="file" id="fileInput" accept="image/*" multiple hidden>
 <datalist id="cityDatalist"></datalist>
 
-<!-- ============ 默认数据(导出时会被替换成你的内容) ============ -->
+<!-- ============ 默认数据 ============ -->
 <script type="application/json" id="site-data">
 {
   "startDate": "2023-05-20",
@@ -1613,7 +1612,6 @@ adminPanel.addEventListener('click', e => {
   const act = btn.dataset.act;
   if(act === 'tab'){ switchTab(btn.dataset.tab); return; }
   if(act === 'save'){ saveAndApply(); return; }
-  if(act === 'export'){ exportSite(); return; }
   if(act === 'reset'){ resetAll(); return; }
   if(act === 'add'){ addEvent(); return; }
   if(act === 'avatar'){ _imgHandler = b64s => { if(b64s[0]){ SITE.loginAvatar = b64s[0]; renderAvatarPreview(); } }; val('fileInput',''); document.getElementById('fileInput').click(); return; }
@@ -1690,34 +1688,6 @@ function processImage(file, cb){
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
-}
-
-/* 导出成品文件 */
-function exportSite(){
-  syncSettingsToSite(); saveSite();
-  const clone = document.documentElement.cloneNode(true);
-  clone.querySelector('#site-data').textContent = JSON.stringify(SITE).replace(/</g, '\\u003c');
-  clone.querySelector('#admin-config').textContent = JSON.stringify({ hash: adminHash(), adminpw: adminPwHash() });
-  const geoSrc = clone.querySelector('#china-geo-src');
-  if(geoSrc && window.CHINA_GEO){
-    geoSrc.removeAttribute('src');
-    geoSrc.textContent = 'window.CHINA_GEO = ' + JSON.stringify(window.CHINA_GEO) + ';';
-  }
-  ['timeline','map','heroTitle','tagline','brand','topBrand','loginTitle','loginBrand','names','evList','memList','cityDatalist','mapTip','addImgs','loginAlbum','playerBody','avatarsBody','annWidget'].forEach(id => {
-    const el = clone.querySelector('#' + id); if(el) el.innerHTML = '';
-  });
-  const dn = clone.querySelector('#dayNum'); if(dn) dn.textContent = '0';
-  const dl = clone.querySelector('#dayLive'); if(dl) dl.textContent = '';
-  const adm = clone.querySelector('#admin'); if(adm) adm.classList.remove('open');
-  const mp = clone.querySelector('#memPanel'); if(mp) mp.hidden = true;
-  const am = clone.querySelector('#addModal'); if(am) am.hidden = true;
-  const appEl = clone.querySelector('#app'); if(appEl) appEl.hidden = true;
-  const loginEl = clone.querySelector('#loginScreen'); if(loginEl) loginEl.hidden = false;
-  const html = '<!DOCTYPE html>\n' + clone.outerHTML;
-  const blob = new Blob([html], { type:'text/html' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'love-story.html'; a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 /* =====================================================================
