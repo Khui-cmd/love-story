@@ -328,34 +328,11 @@ body{
         <h1 id="loginTitle">花束みたいな<br>日々</h1>
         <div class="sub">我们的恋爱日常</div>
         <div class="login-form">
-          <div class="hint" id="loginHint">请输入密码</div>
+          <div class="hint" id="loginHint">用你的账号登录</div>
           <form id="loginForm">
-            <div class="pin-display" id="loginDisplay"><span class="pin-hint">输入密码</span></div>
-            <input type="password" id="loginPw" hidden>
-            <div class="keypad" id="loginKeypad">
-              <button type="button" class="key" data-k="1">1</button>
-              <button type="button" class="key" data-k="2">2</button>
-              <button type="button" class="key" data-k="3">3</button>
-              <button type="button" class="key" data-k="4">4</button>
-              <button type="button" class="key" data-k="5">5</button>
-              <button type="button" class="key" data-k="6">6</button>
-              <button type="button" class="key" data-k="7">7</button>
-              <button type="button" class="key" data-k="8">8</button>
-              <button type="button" class="key" data-k="9">9</button>
-              <button type="button" class="key key-fn" data-k="clear">清空</button>
-              <button type="button" class="key" data-k="0">0</button>
-              <button type="button" class="key key-fn" data-k="del">⌫</button>
-            </div>
-            <input type="password" id="loginPwText" class="kb-input" placeholder="输入密码" autocomplete="current-password" hidden>
-            <div class="kb-toggle" id="kbToggle">⌨ 使用键盘输入</div>
+            <input type="text" id="loginUser" placeholder="账号" autocomplete="username">
+            <input type="password" id="loginPw" placeholder="密码" autocomplete="current-password" style="margin-top:10px">
             <button class="btn block" style="margin-top:16px">进入</button>
-          </form>
-          <form id="setupForm" hidden>
-            <label>设置访问密码(4-8 位数字)</label>
-            <input type="password" id="setupPw1" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" maxlength="8">
-            <label>再输一次</label>
-            <input type="password" id="setupPw2" autocomplete="new-password" inputmode="numeric" pattern="[0-9]*" maxlength="8">
-            <button class="btn block" style="margin-top:18px">保存密码并进入</button>
           </form>
           <div class="login-err" id="loginErr"></div>
         </div>
@@ -799,7 +776,7 @@ function dateKey(d){ const m = String(d||'').match(/(\d{4})[.\-/](\d{1,2})[.\-/]
 
    ※ 后端必须允许跨域(CORS):Access-Control-Allow-Origin 放开到你的站点域名。
    ※ 照片走 JSON+base64 是为了后端实现最简单;若你的后端只支持 multipart,把 cloudUpload 改一下即可。
-   ※ 注意:登录页的「访问密码」始终是本地前端校验(挡路人),不会同步到云端;真正的写权限由上面的登录令牌控制。
+   ※ 登录页现在直接就是云账号登录;登录成功后拿到的令牌同时拥有读写权限。
    ===================================================================== */
 const CLOUD = {
   enabled: true,        // 已开启在线保存
@@ -827,10 +804,10 @@ async function cloudLogin(user, pass){
 }
 async function cloudGetSite(){
   try{
-    const r = await fetch(CLOUD.baseUrl + '/api/site');
+    const r = await fetch(CLOUD.baseUrl + '/api/site', { headers: cloudAuthHeader() });
     if(!r.ok) return null;
     const j = await r.json().catch(() => null);
-    return (j && j.data) ? j.data : j;
+    return (j && j.data != null) ? j.data : null;
   }catch(e){ console.error('拉取云端数据失败', e); return null; }
 }
 let _cloudWarned = false;
@@ -881,6 +858,8 @@ function applyCloudUI(){
   if(!CLOUD.enabled) return;
   const row = document.getElementById('set-adminpw-row');
   if(row) row.hidden = true; // 云端模式下管理员密码由后端管理,隐藏本地「修改管理员密码」
+  const pw = document.getElementById('set-pw');
+  if(pw){ pw.hidden = true; if(pw.previousElementSibling && pw.previousElementSibling.tagName === 'LABEL') pw.previousElementSibling.hidden = true; } // 云模式:登录页即账号密码,隐藏「修改访问密码」
 }
 
 /* 34 个省级行政区(与地图 GeoJSON 名称一致) */
@@ -1544,7 +1523,7 @@ const io = new IntersectionObserver(entries => {
 function setupReveal(){ document.querySelectorAll('.reveal:not(.is-visible)').forEach(el => io.observe(el)); }
 
 /* =====================================================================
-   登录
+   登录(云账号)
    ===================================================================== */
 let authed = sessionStorage.getItem('love-authed') === '1';
 let adminAuthed = sessionStorage.getItem('love-admin-authed') === '1';
@@ -1552,75 +1531,37 @@ const loginScreen = document.getElementById('loginScreen');
 const app = document.getElementById('app');
 
 function renderAuthForm(){
-  const h = adminHash();
-  document.getElementById('loginForm').hidden = !h;
-  document.getElementById('setupForm').hidden = !!h;
-  document.getElementById('loginHint').textContent = h ? '请输入密码' : '首次使用,请先设置访问密码';
+  document.getElementById('loginHint').textContent = '用你的账号登录';
   document.getElementById('loginErr').textContent = '';
-  val('loginPw',''); val('setupPw1',''); val('setupPw2','');
-  _pin = ''; val('loginPwText',''); kbMode(false); pinRender();
+  val('loginUser',''); val('loginPw','');
 }
 function setLoginErr(msg){ document.getElementById('loginErr').textContent = msg; }
 
-document.getElementById('loginForm').addEventListener('submit', e => {
+document.getElementById('loginForm').addEventListener('submit', async e => {
   e.preventDefault();
-  if(hashPw(val('loginPw')) === adminHash()){ enterApp(); }
-  else setLoginErr('密码不对哦');
-});
-document.getElementById('setupForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const a = val('setupPw1'), b = val('setupPw2');
-  if(!/^[0-9]+$/.test(a)){ setLoginErr('密码请只用数字'); return; }
-  if(a.length < 4){ setLoginErr('密码至少 4 位'); return; }
-  if(a !== b){ setLoginErr('两次输入不一致'); return; }
-  try{ localStorage.setItem('love-admin', hashPw(a)); }catch(e){}
+  const user = val('loginUser').trim();
+  const pw = val('loginPw');
+  if(!user){ setLoginErr('请输入账号'); return; }
+  if(!pw){ setLoginErr('请输入密码'); return; }
+  const ok = await cloudLogin(user, pw);
+  if(!ok){ setLoginErr('账号或密码不对,或网络不通'); return; }
   enterApp();
 });
 
-/* 拨号式密码键盘 */
-let _pin = '';
-function pinRender(){
-  const el = document.getElementById('loginDisplay');
-  el.innerHTML = _pin ? '<span style="letter-spacing:10px">' + '•'.repeat(_pin.length) + '</span>'
-                      : '<span class="pin-hint">输入密码</span>';
-  val('loginPw', _pin);
-}
-function pinAppend(k){
-  setLoginErr('');
-  if(k === 'clear'){ _pin = ''; }
-  else if(k === 'del'){ _pin = _pin.slice(0, -1); }
-  else if(/^[0-9]$/.test(k) && _pin.length < 12){ _pin += k; }
-  pinRender();
-}
-function kbMode(useKeyboard){
-  document.getElementById('loginKeypad').hidden = useKeyboard;
-  document.getElementById('loginPwText').hidden = !useKeyboard;
-  document.getElementById('loginDisplay').hidden = useKeyboard;
-  document.getElementById('kbToggle').textContent = useKeyboard ? '🔢 使用拨号键盘' : '⌨ 使用键盘输入';
-  if(useKeyboard){ val('loginPwText', _pin); document.getElementById('loginPwText').focus(); }
-}
-document.getElementById('loginKeypad').addEventListener('click', e => {
-  const b = e.target.closest('.key');
-  if(b) pinAppend(b.getAttribute('data-k'));
-});
-document.getElementById('kbToggle').addEventListener('click', () => kbMode(document.getElementById('loginPwText').hidden));
-document.getElementById('loginPwText').addEventListener('input', e => {
-  _pin = e.target.value.replace(/\D/g, '').slice(0, 12);
-  val('loginPw', _pin);
-  setLoginErr('');
-});
-
-function enterApp(){
+async function enterApp(){
   authed = true;
-  try{ sessionStorage.setItem('love-authed','1'); }catch(e){}
+  adminAuthed = CLOUD.enabled; // 云模式:登录即获得编辑权限
+  try{ sessionStorage.setItem('love-authed','1'); if(CLOUD.enabled) sessionStorage.setItem('love-admin-authed','1'); }catch(e){}
   loginScreen.hidden = true;
   app.hidden = false;
+  if(CLOUD.enabled){ await cloudPull(); } // 登录后拉取云端数据
   renderAll(); applyMode();
 }
 function showLogin(){
   authed = false;
   adminAuthed = false;
   try{ sessionStorage.removeItem('love-authed'); sessionStorage.removeItem('love-admin-authed'); }catch(e){}
+  if(CLOUD.enabled){ try{ localStorage.removeItem(CLOUD.tokenKey); }catch(e){} } // 退出即清除登录令牌
   app.hidden = true;
   loginScreen.hidden = false;
   renderAuthForm();
@@ -1664,14 +1605,11 @@ function renderLoginCover(){
   }
 }
 function renderLoginAlbum(){
-  renderLoginCover();
+  // 登录前不展示任何回忆照片(内容都在账号密码之后)
+  const cover = document.getElementById('loginCover');
+  cover.hidden = true; cover.innerHTML = '';
   const box = document.getElementById('loginAlbum');
-  const evs = SITE.events.slice(-ALBUM_SLOTS.length);
-  if(!evs.length){
-    box.innerHTML = '<div class="album-card" style="--x:50%;--y:50%;--rot:-3deg;--z:0px"><div class="pc-img pc-ph">💌</div><div class="pc-cap"><div class="pc-t">还没有回忆</div><div class="pc-s">登录后开始记录你们的瞬间</div></div></div>';
-    return;
-  }
-  box.innerHTML = evs.map(albumCardHTML).join('');
+  box.innerHTML = '<div class="album-card" style="--x:50%;--y:50%;--rot:-3deg;--z:0px"><div class="pc-img pc-ph">💌</div><div class="pc-cap"><div class="pc-t">登录后查看</div><div class="pc-s">你们的专属回忆</div></div></div>';
 }
 document.getElementById('loginShow').addEventListener('mousemove', e => {
   const r = e.currentTarget.getBoundingClientRect();
@@ -1692,19 +1630,17 @@ const admin = document.getElementById('admin');
 const adminPanel = admin.querySelector('.admin-panel');
 
 function openAdmin(){
-  if(adminAuthed){ admin.classList.add('open'); renderEditor(); return; }
   if(CLOUD.enabled){
-    document.getElementById('adminUserField').hidden = false;
-    document.getElementById('adminPwTitle').textContent = '云同步 · 管理员登录';
-    document.getElementById('adminPwConfirmField').hidden = true;
-    document.getElementById('adminPwHint').textContent = '用你的云端账号登录(账号密码由后端管理)。';
-  } else {
-    document.getElementById('adminUserField').hidden = true;
-    const has = !!adminPwHash();
-    document.getElementById('adminPwTitle').textContent = has ? '请输入管理员密码' : '首次进入,请设置管理员密码';
-    document.getElementById('adminPwConfirmField').hidden = has;
-    document.getElementById('adminPwHint').textContent = has ? '管理员密码与访问密码是两套密码。' : '设置一个独立的管理员密码(与访问密码分开)。';
+    // 云模式:登录页已用账号鉴权,直接进入编辑
+    adminAuthed = true;
+    admin.classList.add('open'); renderEditor(); return;
   }
+  if(adminAuthed){ admin.classList.add('open'); renderEditor(); return; }
+  const has = !!adminPwHash();
+  document.getElementById('adminUserField').hidden = true;
+  document.getElementById('adminPwTitle').textContent = has ? '请输入管理员密码' : '首次进入,请设置管理员密码';
+  document.getElementById('adminPwConfirmField').hidden = has;
+  document.getElementById('adminPwHint').textContent = has ? '管理员密码与访问密码是两套密码。' : '设置一个独立的管理员密码(与访问密码分开)。';
   val('adminPwInput',''); val('adminPwConfirm',''); val('adminUserInput','');
   document.getElementById('adminPwModal').hidden = false;
   setTimeout(() => document.getElementById('adminPwInput').focus(), 0);
@@ -1976,13 +1912,10 @@ document.getElementById('adminPwOverlay').addEventListener('click', () => docume
 document.getElementById('adminPwModal').addEventListener('keydown', e => { if(e.key === 'Enter') adminPwSubmit(); });
 
 if(authed){ enterApp(); } else { showLogin(); }
-renderAuthForm();
 renderHero();
-renderLoginAlbum();
 updateCounter();
 setInterval(updateCounter, 1000);
 applyCloudUI();
-cloudPull();
 
 makeDraggable('playerCard');
 makeDraggable('avatarsCard');
