@@ -540,6 +540,15 @@ body{
       <div class="ed-hint">填写名称与日期,显示在右上角卡片(支持多个,留空名称或日期则不显示)。</div>
       <div id="annList"></div>
       <button class="btn ghost sm" data-act="annadd">＋ 添加纪念日</button>
+      <div id="cloud-acct-row" hidden>
+        <hr>
+        <label>账号</label>
+        <div class="ed-hint">每个账号有自己独立的回忆和密码。</div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn sm" id="btnChangePw">🔒 修改我的密码</button>
+          <button class="btn ghost sm" id="btnManageUsers" hidden>👥 账号管理</button>
+        </div>
+      </div>
       <hr>
       <label>修改访问密码(留空则不修改)</label>
       <input type="password" id="set-pw" autocomplete="new-password">
@@ -571,6 +580,46 @@ body{
       <button class="btn ghost" id="adminPwCancel">取消</button>
       <button class="btn rose" id="adminPwOk">进入管理后台</button>
     </div>
+  </div>
+</div>
+
+<!-- 修改密码(云) -->
+<div id="changePwModal" class="add-modal" hidden>
+  <div class="add-overlay" id="changePwOverlay"></div>
+  <div class="add-card" style="width:min(380px,94vw)">
+    <div class="add-head">
+      <div class="add-title">修改我的密码</div>
+      <button class="add-close" id="changePwClose">×</button>
+    </div>
+    <label class="add-field">当前密码<input type="password" id="cpOld" autocomplete="current-password"></label>
+    <label class="add-field">新密码<input type="password" id="cpNew" autocomplete="new-password"></label>
+    <label class="add-field">再输一次<input type="password" id="cpNew2" autocomplete="new-password"></label>
+    <div class="ed-hint" id="changePwHint" style="margin-top:6px"></div>
+    <div class="add-actions">
+      <button class="btn ghost" id="changePwCancel">取消</button>
+      <button class="btn rose" id="changePwOk">保存新密码</button>
+    </div>
+  </div>
+</div>
+
+<!-- 账号管理(云 · 管理员) -->
+<div id="manageUsersModal" class="add-modal" hidden>
+  <div class="add-overlay" id="manageUsersOverlay"></div>
+  <div class="add-card" style="width:min(420px,94vw)">
+    <div class="add-head">
+      <div class="add-title">账号管理</div>
+      <button class="add-close" id="manageUsersClose">×</button>
+    </div>
+    <div class="ed-hint">每个账号有自己独立的回忆和密码。</div>
+    <div class="add-field" style="margin-top:8px">
+      <input id="muUser" placeholder="新账号名" autocomplete="off">
+      <input id="muPass" type="password" placeholder="初始密码" autocomplete="off" style="margin-top:6px">
+    </div>
+    <div class="add-actions" style="margin-top:8px">
+      <button class="btn sm" id="muAdd">＋ 添加账号</button>
+    </div>
+    <div class="ed-hint" style="margin-top:12px">现有账号：</div>
+    <div id="muList" style="margin-top:6px"></div>
   </div>
 </div>
 
@@ -785,6 +834,9 @@ const CLOUD = {
   tokenKey: 'love-cloud-token', // 登录成功后令牌存在 localStorage 的这个 key 里
 };
 
+let _isAdmin = sessionStorage.getItem('love-is-admin') === '1';
+function currentUser(){ try{ return localStorage.getItem('love-cloud-user') || ''; }catch(e){ return ''; } }
+
 function cloudAuthHeader(){
   const t = (CLOUD.staticToken || localStorage.getItem(CLOUD.tokenKey) || '').trim();
   return t ? { 'Authorization':'Bearer ' + t } : {};
@@ -798,7 +850,12 @@ async function cloudLogin(user, pass){
     });
     const j = await r.json().catch(() => null);
     const token = j && (j.token || j.access_token || (j.data && j.data.token));
-    if(r.ok && token){ try{ localStorage.setItem(CLOUD.tokenKey, token); }catch(e){} return true; }
+    if(r.ok && token){
+      try{ localStorage.setItem(CLOUD.tokenKey, token); }catch(e){}
+      _isAdmin = !!(j && j.admin);
+      try{ sessionStorage.setItem('love-is-admin', _isAdmin ? '1' : '0'); localStorage.setItem('love-cloud-user', user); }catch(e){}
+      return true;
+    }
     return false;
   }catch(e){ console.error('云登录失败', e); return false; }
 }
@@ -841,6 +898,33 @@ async function cloudUpload(dataUrl){
   if(!url) throw new Error('后端未返回 url');
   return url;
 }
+/* 账号管理(云) */
+async function cloudChangePw(oldPass, newPass){
+  const r = await fetch(CLOUD.baseUrl + '/api/password', {
+    method:'POST', headers: Object.assign({'Content-Type':'application/json'}, cloudAuthHeader()),
+    body: JSON.stringify({ old: oldPass, new: newPass })
+  });
+  if(!r.ok){ const j = await r.json().catch(() => null); throw new Error((j && j.error) || ('HTTP ' + r.status)); }
+}
+async function cloudListUsers(){
+  const r = await fetch(CLOUD.baseUrl + '/api/users', { headers: cloudAuthHeader() });
+  if(!r.ok){ const j = await r.json().catch(() => null); throw new Error((j && j.error) || ('HTTP ' + r.status)); }
+  const j = await r.json().catch(() => null);
+  return (j && j.users) ? j.users : [];
+}
+async function cloudAddUser(user, pass){
+  const r = await fetch(CLOUD.baseUrl + '/api/users', {
+    method:'POST', headers: Object.assign({'Content-Type':'application/json'}, cloudAuthHeader()),
+    body: JSON.stringify({ user, pass })
+  });
+  if(!r.ok){ const j = await r.json().catch(() => null); throw new Error((j && j.error) || ('HTTP ' + r.status)); }
+}
+async function cloudDeleteUser(user){
+  const r = await fetch(CLOUD.baseUrl + '/api/users/' + encodeURIComponent(user), {
+    method:'DELETE', headers: cloudAuthHeader()
+  });
+  if(!r.ok){ const j = await r.json().catch(() => null); throw new Error((j && j.error) || ('HTTP ' + r.status)); }
+}
 /* 启动时:有云端数据就拉到本地;云端还是空的就把本地推上去(首次迁移) */
 async function cloudPull(){
   if(!CLOUD.enabled) return;
@@ -860,6 +944,10 @@ function applyCloudUI(){
   if(row) row.hidden = true; // 云端模式下管理员密码由后端管理,隐藏本地「修改管理员密码」
   const pw = document.getElementById('set-pw');
   if(pw){ pw.hidden = true; if(pw.previousElementSibling && pw.previousElementSibling.tagName === 'LABEL') pw.previousElementSibling.hidden = true; } // 云模式:登录页即账号密码,隐藏「修改访问密码」
+  const acct = document.getElementById('cloud-acct-row');
+  if(acct) acct.hidden = false;
+  const mu = document.getElementById('btnManageUsers');
+  if(mu) mu.hidden = !_isAdmin;
 }
 
 /* 34 个省级行政区(与地图 GeoJSON 名称一致) */
@@ -1556,12 +1644,14 @@ async function enterApp(){
   app.hidden = false;
   if(CLOUD.enabled){ await cloudPull(); } // 登录后拉取云端数据
   renderAll(); applyMode();
+  applyCloudUI(); // 刷新账号管理按钮(管理员可见)
 }
 function showLogin(){
   authed = false;
   adminAuthed = false;
-  try{ sessionStorage.removeItem('love-authed'); sessionStorage.removeItem('love-admin-authed'); }catch(e){}
-  if(CLOUD.enabled){ try{ localStorage.removeItem(CLOUD.tokenKey); }catch(e){} } // 退出即清除登录令牌
+  try{ sessionStorage.removeItem('love-authed'); sessionStorage.removeItem('love-admin-authed'); sessionStorage.removeItem('love-is-admin'); }catch(e){}
+  _isAdmin = false;
+  if(CLOUD.enabled){ try{ localStorage.removeItem(CLOUD.tokenKey); localStorage.removeItem('love-cloud-user'); }catch(e){} } // 退出即清除登录令牌
   app.hidden = true;
   loginScreen.hidden = false;
   renderAuthForm();
@@ -1910,6 +2000,75 @@ document.getElementById('adminPwCancel').addEventListener('click', () => documen
 document.getElementById('adminPwClose').addEventListener('click', () => document.getElementById('adminPwModal').hidden = true);
 document.getElementById('adminPwOverlay').addEventListener('click', () => document.getElementById('adminPwModal').hidden = true);
 document.getElementById('adminPwModal').addEventListener('keydown', e => { if(e.key === 'Enter') adminPwSubmit(); });
+
+/* 账号(云):修改密码 / 账号管理 */
+function openChangePw(){
+  val('cpOld',''); val('cpNew',''); val('cpNew2','');
+  document.getElementById('changePwHint').textContent = '';
+  document.getElementById('changePwModal').hidden = false;
+  setTimeout(() => document.getElementById('cpOld').focus(), 0);
+}
+async function submitChangePw(){
+  const oldPass = val('cpOld'), n1 = val('cpNew'), n2 = val('cpNew2');
+  const hint = document.getElementById('changePwHint');
+  if(!oldPass){ hint.textContent = '请输入当前密码'; return; }
+  if(!n1){ hint.textContent = '请输入新密码'; return; }
+  if(n1 !== n2){ hint.textContent = '两次输入的新密码不一致'; return; }
+  try{
+    await cloudChangePw(oldPass, n1);
+    document.getElementById('changePwModal').hidden = true;
+    alert('密码已修改');
+  }catch(e){ hint.textContent = e.message || '修改失败'; }
+}
+function renderUserList(users){
+  const list = document.getElementById('muList');
+  const me = currentUser();
+  if(!users.length){ list.innerHTML = '<div class="ed-hint">暂无账号</div>'; return; }
+  list.innerHTML = users.map(u => {
+    const self = u.user === me;
+    const badge = u.admin ? ' <span style="color:var(--rose-deep);font-size:12px">管理员</span>' : '';
+    const del = self ? '' : '<button class="btn ghost sm" data-mudel="' + esc(u.user) + '">删除</button>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--paper-2)">' +
+      '<span>' + esc(u.user) + badge + (self ? ' <span style="color:var(--ink-soft);font-size:12px">(你)</span>' : '') + '</span>' + del + '</div>';
+  }).join('');
+}
+async function openManageUsers(){
+  document.getElementById('manageUsersModal').hidden = false;
+  val('muUser',''); val('muPass','');
+  try{ renderUserList(await cloudListUsers()); }
+  catch(e){ document.getElementById('muList').innerHTML = '<div class="ed-hint">加载失败:' + esc(e.message) + '</div>'; }
+}
+async function submitAddUser(){
+  const u = val('muUser').trim(), p = val('muPass');
+  if(!u){ alert('请输入账号名'); return; }
+  if(!p){ alert('请输入初始密码'); return; }
+  try{
+    await cloudAddUser(u, p);
+    val('muUser',''); val('muPass','');
+    renderUserList(await cloudListUsers());
+  }catch(e){ alert(e.message || '添加失败'); }
+}
+async function deleteUser(name){
+  if(!confirm('确定删除账号「' + name + '」吗?其回忆数据也会一并删除。')) return;
+  try{
+    await cloudDeleteUser(name);
+    renderUserList(await cloudListUsers());
+  }catch(e){ alert(e.message || '删除失败'); }
+}
+
+document.getElementById('btnChangePw').addEventListener('click', openChangePw);
+document.getElementById('btnManageUsers').addEventListener('click', openManageUsers);
+document.getElementById('changePwOk').addEventListener('click', submitChangePw);
+document.getElementById('changePwCancel').addEventListener('click', () => document.getElementById('changePwModal').hidden = true);
+document.getElementById('changePwClose').addEventListener('click', () => document.getElementById('changePwModal').hidden = true);
+document.getElementById('changePwOverlay').addEventListener('click', () => document.getElementById('changePwModal').hidden = true);
+document.getElementById('muAdd').addEventListener('click', submitAddUser);
+document.getElementById('manageUsersClose').addEventListener('click', () => document.getElementById('manageUsersModal').hidden = true);
+document.getElementById('manageUsersOverlay').addEventListener('click', () => document.getElementById('manageUsersModal').hidden = true);
+document.getElementById('muList').addEventListener('click', e => {
+  const b = e.target.closest('[data-mudel]');
+  if(b) deleteUser(b.getAttribute('data-mudel'));
+});
 
 if(authed){ enterApp(); } else { showLogin(); }
 renderHero();
