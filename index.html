@@ -58,6 +58,9 @@ body{
 .login-form input:focus{ outline:none; border-color:var(--rose); }
 .login-form .btn{ padding:15px; font-size:17px; letter-spacing:.2em; }
 .login-err{ min-height:20px; margin-top:14px; font-size:14px; color:var(--rose-deep); }
+.login-switch{ margin-top:16px; font-size:14px; }
+.login-switch a{ color:var(--rose-deep); text-decoration:none; letter-spacing:.05em; cursor:pointer; }
+.login-switch a:hover{ text-decoration:underline; }
 
 /* 拨号式密码键盘 */
 .pin-display{ height:60px; display:flex; align-items:center; justify-content:center; background:#fdf6ef; border:1px solid #f0dfcd; border-radius:12px; font-size:30px; letter-spacing:10px; color:#5c4a44; margin-bottom:18px; }
@@ -334,7 +337,17 @@ body{
             <input type="password" id="loginPw" placeholder="密码" autocomplete="current-password" style="margin-top:10px">
             <button class="btn block" style="margin-top:16px">进入</button>
           </form>
+          <form id="registerForm" hidden>
+            <input type="text" id="regUser" placeholder="新账号名" autocomplete="username">
+            <input type="password" id="regPw" placeholder="设置密码(至少4位)" autocomplete="new-password" style="margin-top:10px">
+            <input type="password" id="regPw2" placeholder="再输一次密码" autocomplete="new-password" style="margin-top:10px">
+            <button class="btn block" style="margin-top:16px">创建账号并进入</button>
+          </form>
           <div class="login-err" id="loginErr"></div>
+          <div class="login-switch">
+            <a id="toRegister">没有账号?新建一个</a>
+            <a id="toLogin" hidden>已有账号?去登录</a>
+          </div>
         </div>
       </div>
     </div>
@@ -858,6 +871,22 @@ async function cloudLogin(user, pass){
     }
     return false;
   }catch(e){ console.error('云登录失败', e); return false; }
+}
+async function cloudRegister(user, pass){
+  try{
+    const r = await fetch(CLOUD.baseUrl + '/api/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass })
+    });
+    const j = await r.json().catch(() => null);
+    if(r.ok && j && j.token){
+      try{ localStorage.setItem(CLOUD.tokenKey, j.token); }catch(e){}
+      _isAdmin = false;
+      try{ sessionStorage.setItem('love-is-admin', '0'); localStorage.setItem('love-cloud-user', user); }catch(e){}
+      return true;
+    }
+    throw new Error((j && j.error) || ('创建失败(HTTP ' + r.status + ')'));
+  }catch(e){ console.error('云注册失败', e); throw e; }
 }
 async function cloudGetSite(){
   try{
@@ -1619,11 +1648,30 @@ const loginScreen = document.getElementById('loginScreen');
 const app = document.getElementById('app');
 
 function renderAuthForm(){
-  document.getElementById('loginHint').textContent = '用你的账号登录';
-  document.getElementById('loginErr').textContent = '';
-  val('loginUser',''); val('loginPw','');
+  showLoginForm();
+  val('loginUser',''); val('regUser','');
 }
 function setLoginErr(msg){ document.getElementById('loginErr').textContent = msg; }
+function showLoginForm(){
+  document.getElementById('loginForm').hidden = false;
+  document.getElementById('registerForm').hidden = true;
+  document.getElementById('toRegister').hidden = false;
+  document.getElementById('toLogin').hidden = true;
+  document.getElementById('loginHint').textContent = '用你的账号登录';
+  setLoginErr('');
+  val('loginPw','');
+}
+function showRegisterForm(){
+  document.getElementById('loginForm').hidden = true;
+  document.getElementById('registerForm').hidden = false;
+  document.getElementById('toRegister').hidden = true;
+  document.getElementById('toLogin').hidden = false;
+  document.getElementById('loginHint').textContent = '创建新账号';
+  setLoginErr('');
+  val('regPw',''); val('regPw2','');
+}
+document.getElementById('toRegister').addEventListener('click', e => { e.preventDefault(); showRegisterForm(); });
+document.getElementById('toLogin').addEventListener('click', e => { e.preventDefault(); showLoginForm(); });
 
 document.getElementById('loginForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -1634,6 +1682,21 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
   const ok = await cloudLogin(user, pw);
   if(!ok){ setLoginErr('账号或密码不对,或网络不通'); return; }
   enterApp();
+});
+
+document.getElementById('registerForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const user = val('regUser').trim();
+  const pw = val('regPw');
+  const pw2 = val('regPw2');
+  if(!user){ setLoginErr('请输入账号名'); return; }
+  if(pw.length < 4){ setLoginErr('密码至少 4 位'); return; }
+  if(pw !== pw2){ setLoginErr('两次输入的密码不一致'); return; }
+  try{
+    await cloudRegister(user, pw);
+    setLoginErr('');
+    enterApp();
+  }catch(err){ setLoginErr(err.message || '创建失败,请重试'); }
 });
 
 async function enterApp(){

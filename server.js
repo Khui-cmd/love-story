@@ -153,6 +153,17 @@ const server = http.createServer(async (req, res) => {
       if(!u || !verifyPw(String(b && b.pass || ''), u.hash)) return send(res, 401, { error:'账号或密码不对' });
       return send(res, 200, { token: issueToken(u.user) });
     }
+    if(p === '/api/register' && req.method === 'POST'){
+      const b = await readBody(req, 1e6);
+      const user = String(b && b.user || '').trim();
+      const pass = String(b && b.pass || '');
+      if(!user) return send(res, 400, { error:'缺少账号' });
+      if(pass.length < 4) return send(res, 400, { error:'密码至少4位' });
+      if(USERS.some(x => x.user === user)) return send(res, 409, { error:'账号已存在' });
+      USERS.push({ user, hash: hashPw(pass) });
+      fs.writeFileSync(USERS_FILE, JSON.stringify(USERS, null, 2));
+      return send(res, 200, { token: issueToken(user) });
+    }
     if(p === '/api/site' && req.method === 'GET'){
       return send(res, 200, { data: loadData() || {} });
     }

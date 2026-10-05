@@ -11,6 +11,7 @@
 
    接口:
      POST   /api/login       body {user, pass}                 → {token, admin}
+     POST   /api/register    body {user, pass}                 → {token, admin:false} 自助建号(仅普通账号)
      GET    /api/site        (需 Bearer token)                  → {data}    按账号隔离
      PUT    /api/site        (需 token) body {data}             → {ok}
      POST   /api/upload      (需 token) body {name,type,data}   → {url}
@@ -19,6 +20,7 @@
      GET    /api/users       (需管理员)                          → {users}
      POST   /api/users       (需管理员) body {user,pass}         → {ok}      添加账号
      DELETE /api/users/:name (需管理员)                          → {ok}      删除账号
+     POST   /api/users/:name/password (需管理员) body {new}      → {ok}      重置账号密码
      GET    /api/health     检查配置
    ===================================================================== */
 const TOKEN_DAYS = 30;
@@ -77,6 +79,21 @@ async function handle(req, env){
       return json({ token, admin: !!rec.admin });
     }
     return json({ error:'账号或密码不对' }, 401);
+  }
+
+  /* 注册(自助建号,新账号一律为普通账号,管理员仍需在后台添加) */
+  if(p === '/api/register' && req.method === 'POST'){
+    let b; try{ b = await req.json(); }catch(e){ return json({ error:'请求格式错误' }, 400); }
+    const name = String(b && b.user || '').trim();
+    if(!name) return json({ error:'缺少账号' }, 400);
+    if(String(b && b.pass || '').length < 4) return json({ error:'密码至少4位' }, 400);
+    const users = await getUsers(env);
+    if(users[name]) return json({ error:'账号已存在' }, 409);
+    users[name] = { pass: String(b.pass), admin: false };
+    await env.STORE.put('users', JSON.stringify(users));
+    const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
+    await env.STORE.put('token:' + token, name, { expirationTtl: TOKEN_DAYS * 86400 });
+    return json({ token, admin: false });
   }
 
   /* 读全站数据(需登录,按账号隔离) */
@@ -149,6 +166,21 @@ async function handle(req, env){
     delete users[name];
     await env.STORE.put('users', JSON.stringify(users));
     await env.STORE.delete('site:' + name); // 一并删除其回忆数据
+    return json({ ok:true });
+  }
+
+  /* 重置某账号密码(需管理员) */
+  if(p.startsWith('/api/users/') && p.endsWith('/password') && req.method === 'POST'){
+    const u = await auth(req, env);
+    if(!u) return json({ error:'未登录或令牌过期' }, 401);
+    const users = await getUsers(env);
+    if(!(users[u] && users[u].admin)) return json({ error:'需要管理员权限' }, 403);
+    let b; try{ b = await req.json(); }catch(e){ return json({ error:'请求格式错误' }, 400); }
+    const name = decodeURIComponent(p.slice('/api/users/'.length, -'/password'.length));
+    if(!name || !users[name]) return json({ error:'账号不存在' }, 404);
+    if(!b.new || String(b.new).length < 4) return json({ error:'新密码至少4位' }, 400);
+    users[name].pass = String(b.new);
+    await env.STORE.put('users', JSON.stringify(users));
     return json({ ok:true });
   }
 

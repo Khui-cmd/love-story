@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账号管理 · 管理员</title>
+<style>
+  :root{ --rose:#e89aa8; --rose-deep:#c96a7e; --sage:#9bb7a7; --ink:#5a4a42; --ink-soft:#9a8a80; --paper:#fffdfb; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:28px; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink); background:linear-gradient(170deg,#fdf8f2 0%,#faf1e6 48%,#f6e8da 100%);
+  }
+  .card{ width:min(560px,100%); background:var(--paper); border-radius:18px; box-shadow:0 30px 80px -34px rgba(150,105,85,.5); padding:44px 40px; }
+  h1{ margin:0 0 6px; font-size:24px; letter-spacing:.08em; }
+  .sub{ margin:0 0 26px; font-size:14px; color:var(--ink-soft); }
+  label{ display:block; font-size:14px; color:var(--ink-soft); margin:14px 0 8px; }
+  input{ width:100%; padding:13px 15px; font-size:16px; border:1px solid #e7d9cd; border-radius:6px; background:#fff; color:var(--ink); font-family:inherit; }
+  input:focus{ outline:none; border-color:var(--rose); }
+  .btn{ display:inline-block; padding:12px 20px; font-size:15px; border:0; border-radius:6px; cursor:pointer; font-family:inherit; letter-spacing:.06em; background:var(--rose); color:#fff; }
+  .btn:hover{ filter:brightness(.97); }
+  .btn.ghost{ background:transparent; color:var(--rose-deep); border:1px solid #e7d9cd; }
+  .btn.sm{ padding:7px 13px; font-size:13px; }
+  .btn.danger{ background:transparent; color:#c96a7e; border:1px solid #f0d4da; }
+  .btn.block{ display:block; width:100%; margin-top:16px; }
+  .err{ min-height:20px; margin-top:12px; font-size:14px; color:var(--rose-deep); }
+  .ok{ color:var(--sage); }
+  .row{ display:flex; gap:10px; }
+  .row input{ flex:1; }
+  .top{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .top a{ font-size:13px; color:var(--rose-deep); cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .top a:hover{ text-decoration:underline; }
+  .divider{ height:1px; background:#f0e5d9; margin:22px 0; }
+  .list{ margin-top:4px; }
+  .item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 2px; border-bottom:1px solid #f0e5d9; }
+  .item .name{ font-size:15px; }
+  .badge{ font-size:12px; color:var(--rose-deep); }
+  .muted{ font-size:12px; color:var(--ink-soft); }
+  .item .acts{ display:flex; gap:8px; flex:none; }
+</style>
+</head>
+<body>
+  <div class="card" id="loginCard">
+    <h1>账号管理</h1>
+    <p class="sub">仅管理员可进入 · 独立于主站</p>
+    <label>管理员账号</label>
+    <input id="user" placeholder="账号" autocomplete="username">
+    <label>密码</label>
+    <input id="pass" type="password" placeholder="密码" autocomplete="current-password">
+    <button class="btn block" id="loginBtn">登录</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+
+  <div class="card" id="panel" hidden>
+    <div class="top">
+      <div>
+        <h1>账号管理</h1>
+        <p class="sub" id="me" style="margin-bottom:0">当前账号：</p>
+      </div>
+      <a id="logout">退出登录</a>
+    </div>
+
+    <label>添加账号</label>
+    <div class="row">
+      <input id="newUser" placeholder="新账号名" autocomplete="off">
+      <input id="newPass" type="password" placeholder="初始密码" autocomplete="off">
+    </div>
+    <button class="btn block" id="addBtn">＋ 添加账号</button>
+    <div class="err" id="opMsg"></div>
+
+    <div class="divider"></div>
+    <div class="list" id="list"></div>
+  </div>
+
+<script>
+/* 改成你自己的 Worker 地址(与主站 index.html 里的 CLOUD.baseUrl 一致) */
+const BASE = 'https://love-story-api.3503594995.workers.dev';
+const TOKEN_KEY = 'love-admin-token';
+const USER_KEY = 'love-admin-user';
+
+let token = sessionStorage.getItem(TOKEN_KEY) || '';
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function api(path, opts){
+  opts = opts || {};
+  opts.headers = Object.assign({}, opts.headers || {});
+  if(opts.body && !opts.headers['Content-Type']) opts.headers['Content-Type'] = 'application/json';
+  if(token) opts.headers['Authorization'] = 'Bearer ' + token;
+  const r = await fetch(BASE + path, opts);
+  let j = null; try{ j = await r.json(); }catch(e){}
+  if(!r.ok) throw new Error((j && j.error) || ('HTTP ' + r.status));
+  return j;
+}
+
+const loginCard = document.getElementById('loginCard');
+const panel = document.getElementById('panel');
+
+async function login(){
+  const u = document.getElementById('user').value.trim();
+  const p = document.getElementById('pass').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  if(!u){ err.textContent = '请输入账号'; return; }
+  if(!p){ err.textContent = '请输入密码'; return; }
+  try{
+    const j = await api('/api/login', { method:'POST', body: JSON.stringify({ user:u, pass:p }) });
+    if(!j.admin){ err.textContent = '该账号不是管理员,无法进入'; return; }
+    token = j.token;
+    sessionStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.setItem(USER_KEY, u);
+    document.getElementById('pass').value = '';
+    await showPanel();
+  }catch(e){ err.textContent = e.message || '登录失败'; }
+}
+
+async function showPanel(){
+  const me = sessionStorage.getItem(USER_KEY) || '';
+  document.getElementById('me').textContent = '当前账号：' + me;
+  loginCard.hidden = true;
+  panel.hidden = false;
+  await refresh();
+}
+
+async function refresh(){
+  const list = document.getElementById('list');
+  try{
+    const j = await api('/api/users', { method:'GET' });
+    const me = sessionStorage.getItem(USER_KEY) || '';
+    if(!j.users || !j.users.length){ list.innerHTML = '<div class="muted">暂无账号</div>'; return; }
+    list.innerHTML = j.users.map(u => {
+      const self = u.user === me;
+      const badge = u.admin ? ' <span class="badge">管理员</span>' : '';
+      const del = u.admin ? '' : '<button class="btn sm danger" data-del="' + esc(u.user) + '">删除</button>';
+      const reset = '<button class="btn sm ghost" data-reset="' + esc(u.user) + '">重置密码</button>';
+      return '<div class="item">' +
+        '<div class="name">' + esc(u.user) + badge + (self ? ' <span class="muted">(你)</span>' : '') + '</div>' +
+        '<div class="acts">' + reset + del + '</div>' +
+      '</div>';
+    }).join('');
+  }catch(e){ list.innerHTML = '<div class="muted">加载失败：' + esc(e.message) + '</div>'; }
+}
+
+async function addUser(){
+  const u = document.getElementById('newUser').value.trim();
+  const p = document.getElementById('newPass').value;
+  const msg = document.getElementById('opMsg');
+  msg.textContent = '';
+  if(!u){ msg.textContent = '请输入账号名'; return; }
+  if(p.length < 4){ msg.textContent = '密码至少4位'; return; }
+  try{
+    await api('/api/users', { method:'POST', body: JSON.stringify({ user:u, pass:p }) });
+    document.getElementById('newUser').value = '';
+    document.getElementById('newPass').value = '';
+    msg.innerHTML = '<span class="ok">已添加账号 ' + esc(u) + '</span>';
+    await refresh();
+  }catch(e){ msg.textContent = e.message || '添加失败'; }
+}
+
+document.getElementById('list').addEventListener('click', async e => {
+  const del = e.target.getAttribute('data-del');
+  const reset = e.target.getAttribute('data-reset');
+  const msg = document.getElementById('opMsg');
+  msg.textContent = '';
+  if(del){
+    if(!confirm('确定删除账号「' + del + '」吗?其回忆数据也会一并删除。')) return;
+    try{
+      await api('/api/users/' + encodeURIComponent(del), { method:'DELETE' });
+      msg.innerHTML = '<span class="ok">已删除 ' + esc(del) + '</span>';
+      await refresh();
+    }catch(err){ msg.textContent = err.message || '删除失败'; }
+  }
+  if(reset){
+    const np = prompt('为「' + reset + '」设置新密码(至少4位)：');
+    if(np === null) return;
+    if(np.length < 4){ alert('密码至少4位'); return; }
+    try{
+      await api('/api/users/' + encodeURIComponent(reset) + '/password', { method:'POST', body: JSON.stringify({ new: np }) });
+      msg.innerHTML = '<span class="ok">已重置 ' + esc(reset) + ' 的密码</span>';
+    }catch(err){ msg.textContent = err.message || '重置失败'; }
+  }
+});
+
+function logout(){
+  token = '';
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(USER_KEY);
+  panel.hidden = true;
+  loginCard.hidden = false;
+  document.getElementById('user').value = '';
+  document.getElementById('pass').value = '';
+  document.getElementById('loginErr').textContent = '';
+}
+
+document.getElementById('loginBtn').addEventListener('click', login);
+document.getElementById('addBtn').addEventListener('click', addUser);
+document.getElementById('logout').addEventListener('click', logout);
+document.getElementById('pass').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
+
+if(token){ showPanel(); }
+</script>
+</body>
+</html>

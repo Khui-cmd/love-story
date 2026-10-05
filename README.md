@@ -50,11 +50,14 @@
 
 > 数据文件(`data.json` / `users.json` / `uploads/`)已加入 `.gitignore`,不会提交到 git。
 
+**账号管理后台(独立页面,普通用户不可见)**:浏览器打开 `admin.html`(或部署后的 `你的域名/admin.html`),用管理员账号登录即可增删账号、重置密码。该页面不链接到主站任何地方,只有管理员知道地址。
+
 ## 📁 文件结构
 
 ```
 love-story/
 ├── index.html       # 全部页面 / 样式 / 逻辑(单文件)
+├── admin.html       # 账号管理后台(独立页面,仅管理员)
 ├── china-geo.js     # 离线中国地图 GeoJSON(省 / 市边界)
 ├── server.js        # 后端(账号 + 数据 + 照片,零依赖,可选)
 ├── config.example.json  # 后端配置模板
