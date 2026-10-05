@@ -24,6 +24,8 @@
      GET    /api/health     检查配置
    ===================================================================== */
 const TOKEN_DAYS = 30;
+/* 令牌作废机制:账号带 ver(密码版本);签发 token 时记下当时的 ver。
+   改密码 / 管理员重置密码会让 ver+1,旧 token 的 ver 对不上即判失效。 */
 
 /* 种子账号:用户表为空时写入 KV。admin 账号可管理其他账号。 */
 const accounts = {
@@ -59,7 +61,16 @@ async function auth(req, env){
   const h = req.headers.get('Authorization') || '';
   const m = h.match(/^Bearer\s+(.+)$/i);
   if(!m) return null;
-  return (await env.STORE.get('token:' + m[1])) || null;
+  const raw = await env.STORE.get('token:' + m[1]);
+  if(!raw) return null;
+  // token 值:旧版是纯用户名,新版是 {u, v}(v = 签发时的密码版本)
+  let u = raw, v = 0;
+  try{ const o = JSON.parse(raw); if(o && o.u){ u = o.u; v = o.v || 0; } }catch(e){}
+  const users = await getUsers(env);
+  const rec = users[u];
+  if(!rec) return null;
+  if((rec.ver || 0) !== v){ await env.STORE.delete('token:' + m[1]); return null; } // 密码已改/被重置,旧令牌作废
+  return u;
 }
 
 async function handle(req, env){
@@ -75,7 +86,7 @@ async function handle(req, env){
     const rec = users[b.user];
     if(rec && rec.pass === b.pass){
       const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
-      await env.STORE.put('token:' + token, b.user, { expirationTtl: TOKEN_DAYS * 86400 });
+      await env.STORE.put('token:' + token, JSON.stringify({ u: b.user, v: rec.ver || 0 }), { expirationTtl: TOKEN_DAYS * 86400 });
       return json({ token, admin: !!rec.admin });
     }
     return json({ error:'账号或密码不对' }, 401);
@@ -92,7 +103,7 @@ async function handle(req, env){
     users[name] = { pass: String(b.pass), admin: false };
     await env.STORE.put('users', JSON.stringify(users));
     const token = crypto.randomUUID().replace(/-/g,'') + crypto.randomUUID().replace(/-/g,'');
-    await env.STORE.put('token:' + token, name, { expirationTtl: TOKEN_DAYS * 86400 });
+    await env.STORE.put('token:' + token, JSON.stringify({ u: name, v: 0 }), { expirationTtl: TOKEN_DAYS * 86400 });
     return json({ token, admin: false });
   }
 
@@ -127,6 +138,7 @@ async function handle(req, env){
     if(!rec) return json({ error:'账号不存在' }, 404);
     if(rec.pass !== b.old) return json({ error:'旧密码不对' }, 401);
     rec.pass = b.new;
+    rec.ver = (rec.ver || 0) + 1; // 改密码后作废该账号所有旧 token(含当前会话)
     await env.STORE.put('users', JSON.stringify(users));
     return json({ ok:true });
   }
@@ -180,6 +192,7 @@ async function handle(req, env){
     if(!name || !users[name]) return json({ error:'账号不存在' }, 404);
     if(!b.new || String(b.new).length < 4) return json({ error:'新密码至少4位' }, 400);
     users[name].pass = String(b.new);
+    users[name].ver = (users[name].ver || 0) + 1; // 作废该账号所有已登录 token
     await env.STORE.put('users', JSON.stringify(users));
     return json({ ok:true });
   }

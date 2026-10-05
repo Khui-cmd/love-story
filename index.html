@@ -888,9 +888,17 @@ async function cloudRegister(user, pass){
     throw new Error((j && j.error) || ('创建失败(HTTP ' + r.status + ')'));
   }catch(e){ console.error('云注册失败', e); throw e; }
 }
+let _sessionExpiredFired = false;
+function cloudSessionExpired(){
+  if(_sessionExpiredFired) return;
+  _sessionExpiredFired = true;
+  alert('登录已失效(密码可能被修改或重置),请重新登录');
+  showLogin();
+}
 async function cloudGetSite(){
   try{
     const r = await fetch(CLOUD.baseUrl + '/api/site', { headers: cloudAuthHeader() });
+    if(r.status === 401){ cloudSessionExpired(); return null; }
     if(!r.ok) return null;
     const j = await r.json().catch(() => null);
     return (j && j.data != null) ? j.data : null;
@@ -904,6 +912,7 @@ async function cloudPutSite(site, silent){
       headers: Object.assign({'Content-Type':'application/json'}, cloudAuthHeader()),
       body: JSON.stringify({ data: site })
     });
+    if(r.status === 401){ cloudSessionExpired(); return; }
     if(!r.ok) throw new Error('HTTP ' + r.status);
     console.log('✅ 已保存到云端', new Date().toLocaleTimeString());
   }catch(e){
@@ -921,6 +930,7 @@ async function cloudUpload(dataUrl){
     headers: Object.assign({'Content-Type':'application/json'}, cloudAuthHeader()),
     body: JSON.stringify({ name:'photo-' + Date.now() + '.jpg', type, data })
   });
+  if(r.status === 401){ cloudSessionExpired(); throw new Error('登录已失效'); }
   if(!r.ok) throw new Error('HTTP ' + r.status);
   const j = await r.json().catch(() => null);
   const url = j && (j.url || (j.data && j.data.url));
@@ -1700,6 +1710,7 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
 });
 
 async function enterApp(){
+  _sessionExpiredFired = false; // 重新登录后允许再次触发「登录失效」提示
   authed = true;
   adminAuthed = CLOUD.enabled; // 云模式:登录即获得编辑权限
   try{ sessionStorage.setItem('love-authed','1'); if(CLOUD.enabled) sessionStorage.setItem('love-admin-authed','1'); }catch(e){}
