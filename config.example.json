@@ -1,0 +1,7 @@
+{
+  "port": 3000,
+  "adminUser": "admin",
+  "adminPass": "change-me-123",
+  "publicBaseUrl": "",
+  "tokenDays": 30
+}

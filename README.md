@@ -33,12 +33,31 @@
 
 > 说明:密码为纯前端校验,目的是「挡住路人」而非银行级安全;照片与文字都存在你自己的浏览器里,不会上传到任何服务器。
 
+## ☁️ 在线保存与账号(可选)
+
+默认是纯本地模式(数据在浏览器 localStorage)。想**在不同设备上登录同一账号、看到并编辑同一份内容**,启用后端即可:
+
+1. 安装 [Node.js](https://nodejs.org/)(18 或更新)。
+2. 复制 `config.example.json` 为 `config.json`,改掉账号密码:
+   ```json
+   { "port": 3000, "adminUser": "admin", "adminPass": "你的密码" }
+   ```
+3. 启动:`node server.js`,浏览器打开 `http://localhost:3000`。
+4. 打开 `index.html`,把顶部 `const CLOUD` 里的 `enabled` 改成 `true`,`baseUrl` 留空 `""`(同源)。
+5. 点右上角「⚙ 管理」→ 用 `config.json` 里的账号密码登录 → 改内容即自动存到服务器。
+
+**部署到公网**(让两台设备都能访问):把这个项目整个放到一台能公网访问的机器 / 云服务器 / 托管平台(如 Render、Railway、任意 VPS),跑 `node server.js` 即可。同一个账号在任何设备登录,读写的都是服务器上同一份 `data.json`。
+
+> 数据文件(`data.json` / `users.json` / `uploads/`)已加入 `.gitignore`,不会提交到 git。
+
 ## 📁 文件结构
 
 ```
 love-story/
 ├── index.html       # 全部页面 / 样式 / 逻辑(单文件)
 ├── china-geo.js     # 离线中国地图 GeoJSON(省 / 市边界)
+├── server.js        # 后端(账号 + 数据 + 照片,零依赖,可选)
+├── config.example.json  # 后端配置模板
 └── README.md
 ```
 

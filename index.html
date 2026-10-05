@@ -566,8 +566,10 @@ body{
       <hr>
       <label>修改访问密码(留空则不修改)</label>
       <input type="password" id="set-pw" autocomplete="new-password">
-      <label>修改管理员密码(留空则不修改)</label>
-      <input type="password" id="set-adminpw" autocomplete="new-password">
+      <div id="set-adminpw-row">
+        <label>修改管理员密码(留空则不修改)</label>
+        <input type="password" id="set-adminpw" autocomplete="new-password">
+      </div>
       <div class="row">
         <button class="btn rose" data-act="save">💾 保存并应用</button>
         <button class="btn ghost" data-act="reset">↺ 恢复默认内容</button>
@@ -584,6 +586,7 @@ body{
       <div class="add-title" id="adminPwTitle">请输入管理员密码</div>
       <button class="add-close" id="adminPwClose">×</button>
     </div>
+    <label class="add-field" id="adminUserField" hidden>账号<input id="adminUserInput" autocomplete="off"></label>
     <label class="add-field">管理员密码<input type="password" id="adminPwInput" autocomplete="off" inputmode="numeric"></label>
     <label class="add-field" id="adminPwConfirmField" hidden>确认密码<input type="password" id="adminPwConfirm" autocomplete="off" inputmode="numeric"></label>
     <div class="ed-hint" id="adminPwHint" style="margin-top:6px">管理员密码与访问密码是两套密码。</div>
@@ -775,6 +778,111 @@ function val(id, v){ const el = document.getElementById(id); if(v !== undefined)
 function hashPw(pw){ let h = 5381; const s = pw + '::love-story-salt'; for(let i=0;i<s.length;i++){ h = ((h<<5)+h) ^ s.charCodeAt(i); } return (h>>>0).toString(16); }
 function dateKey(d){ const m = String(d||'').match(/(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})/); return m ? (+m[1]*10000 + +m[2]*100 + +m[3]) : 0; }
 
+/* =====================================================================
+   云同步(在线保存)
+   ───────────────────────────────────────────────────────────────────
+   想启用在线保存:把下面 CLOUD.enabled 改成 true,并填好 baseUrl。
+   不启用时(enabled=false),整站行为和原来完全一样(纯本地 localStorage)。
+
+   后端只需实现 4 个接口,路径固定如下(路径想改就改下面 cloud* 函数里的 URL):
+
+   1) 登录(账号+密码鉴权,拿到写权限令牌)
+      POST {base}/api/login     body: { user, pass }        返回: { token }
+   2) 读全站数据(公开,任何人可读)
+      GET  {base}/api/site                                 返回: { data: SITE对象 }
+   3) 保存全站数据(需登录令牌)
+      PUT  {base}/api/site     body: { data: SITE对象 }
+      header: Authorization: Bearer <token>
+   4) 上传照片(需登录令牌)
+      POST {base}/api/upload    body: { name, type, data }  (data 为纯 base64,不含 "data:" 前缀)
+      返回: { url }
+
+   ※ 后端必须允许跨域(CORS):Access-Control-Allow-Origin 放开到你的站点域名。
+   ※ 照片走 JSON+base64 是为了后端实现最简单;若你的后端只支持 multipart,把 cloudUpload 改一下即可。
+   ※ 注意:登录页的「访问密码」始终是本地前端校验(挡路人),不会同步到云端;真正的写权限由上面的登录令牌控制。
+   ===================================================================== */
+const CLOUD = {
+  enabled: true,        // 已开启在线保存
+  baseUrl: 'https://love-story-api.3503594995.workers.dev',
+  staticToken: '',      // 可选:直接填一个固定写令牌,填了就不走登录,PUT/上传都带上它
+  tokenKey: 'love-cloud-token', // 登录成功后令牌存在 localStorage 的这个 key 里
+};
+
+function cloudAuthHeader(){
+  const t = (CLOUD.staticToken || localStorage.getItem(CLOUD.tokenKey) || '').trim();
+  return t ? { 'Authorization':'Bearer ' + t } : {};
+}
+async function cloudLogin(user, pass){
+  if(CLOUD.staticToken){ try{ localStorage.setItem(CLOUD.tokenKey, CLOUD.staticToken); }catch(e){} return true; }
+  try{
+    const r = await fetch(CLOUD.baseUrl + '/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user, pass })
+    });
+    const j = await r.json().catch(() => null);
+    const token = j && (j.token || j.access_token || (j.data && j.data.token));
+    if(r.ok && token){ try{ localStorage.setItem(CLOUD.tokenKey, token); }catch(e){} return true; }
+    return false;
+  }catch(e){ console.error('云登录失败', e); return false; }
+}
+async function cloudGetSite(){
+  try{
+    const r = await fetch(CLOUD.baseUrl + '/api/site');
+    if(!r.ok) return null;
+    const j = await r.json().catch(() => null);
+    return (j && j.data) ? j.data : j;
+  }catch(e){ console.error('拉取云端数据失败', e); return null; }
+}
+let _cloudWarned = false;
+async function cloudPutSite(site, silent){
+  try{
+    const r = await fetch(CLOUD.baseUrl + '/api/site', {
+      method:'PUT',
+      headers: Object.assign({'Content-Type':'application/json'}, cloudAuthHeader()),
+      body: JSON.stringify({ data: site })
+    });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    console.log('✅ 已保存到云端', new Date().toLocaleTimeString());
+  }catch(e){
+    console.error('保存到云端失败(已暂存本地)', e);
+    if(!silent && !_cloudWarned){ _cloudWarned = true; alert('保存到云端失败,已暂存在本地浏览器。请检查网络或后端配置。'); }
+  }
+}
+async function cloudUpload(dataUrl){
+  // dataUrl 形如 "data:image/jpeg;base64,...."
+  const m = dataUrl.match(/^data:(.*?);base64,([\s\S]*)$/);
+  if(!m) throw new Error('图片数据格式异常');
+  const type = m[1], data = m[2];
+  const r = await fetch(CLOUD.baseUrl + '/api/upload', {
+    method:'POST',
+    headers: Object.assign({'Content-Type':'application/json'}, cloudAuthHeader()),
+    body: JSON.stringify({ name:'photo-' + Date.now() + '.jpg', type, data })
+  });
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json().catch(() => null);
+  const url = j && (j.url || (j.data && j.data.url));
+  if(!url) throw new Error('后端未返回 url');
+  return url;
+}
+/* 启动时:有云端数据就拉到本地;云端还是空的就把本地推上去(首次迁移) */
+async function cloudPull(){
+  if(!CLOUD.enabled) return;
+  const data = await cloudGetSite();
+  if(data){
+    SITE = normalizeSite(data);
+    try{ localStorage.setItem('love-site', JSON.stringify(SITE)); }catch(e){}
+    renderAll(); updateCounter();
+    if(!document.getElementById('memPanel').hidden) showMemories(_memLoc.province, _memLoc.city);
+  } else {
+    cloudPutSite(SITE, true); // 云端还是空的:静默把本地推上去(登录后第一次保存也会再推一次)
+  }
+}
+function applyCloudUI(){
+  if(!CLOUD.enabled) return;
+  const row = document.getElementById('set-adminpw-row');
+  if(row) row.hidden = true; // 云端模式下管理员密码由后端管理,隐藏本地「修改管理员密码」
+}
+
 /* 34 个省级行政区(与地图 GeoJSON 名称一致) */
 const PROVINCES = [
   {name:"北京市",adcode:"110000"},{name:"天津市",adcode:"120000"},{name:"河北省",adcode:"130000"},
@@ -801,10 +909,7 @@ let SITE = loadSite();
 const DEFAULT_MODE = 'map';
 let mode = DEFAULT_MODE;
 
-function loadSite(){
-  let site;
-  try{ const s = localStorage.getItem('love-site'); if(s) site = JSON.parse(s); }catch(e){}
-  if(!site) site = JSON.parse(JSON.stringify(DEFAULT_SITE));
+function normalizeSite(site){
   (site.events || []).forEach(e => { if(!Array.isArray(e.images)) e.images = (e.img ? [e.img] : []); delete e.img; });
   if(!Array.isArray(site.anniversaries)) site.anniversaries = [];
   if(typeof site.showPlayer !== 'boolean') site.showPlayer = true;
@@ -815,9 +920,21 @@ function loadSite(){
   if(typeof site.playerSway !== 'number') site.playerSway = 1.5;
   return site;
 }
+function loadSite(){
+  let site;
+  try{ const s = localStorage.getItem('love-site'); if(s) site = JSON.parse(s); }catch(e){}
+  if(!site) site = JSON.parse(JSON.stringify(DEFAULT_SITE));
+  return normalizeSite(site);
+}
+let _cloudSaveTimer = null;
 function saveSite(){
   try{ localStorage.setItem('love-site', JSON.stringify(SITE)); }
   catch(e){ alert('保存失败:浏览器本地存储满了(照片太多)。请删掉几张本地照片,或改用网络图片链接。'); }
+  if(CLOUD.enabled) cloudQueueSave();
+}
+function cloudQueueSave(){
+  if(_cloudSaveTimer) clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer = setTimeout(() => cloudPutSite(SITE), 600);
 }
 function adminHash(){
   try{ const h = localStorage.getItem('love-admin'); if(h) return h; }catch(e){}
@@ -1576,11 +1693,19 @@ const adminPanel = admin.querySelector('.admin-panel');
 
 function openAdmin(){
   if(adminAuthed){ admin.classList.add('open'); renderEditor(); return; }
-  const has = !!adminPwHash();
-  document.getElementById('adminPwTitle').textContent = has ? '请输入管理员密码' : '首次进入,请设置管理员密码';
-  document.getElementById('adminPwConfirmField').hidden = has;
-  document.getElementById('adminPwHint').textContent = has ? '管理员密码与访问密码是两套密码。' : '设置一个独立的管理员密码(与访问密码分开)。';
-  val('adminPwInput',''); val('adminPwConfirm','');
+  if(CLOUD.enabled){
+    document.getElementById('adminUserField').hidden = false;
+    document.getElementById('adminPwTitle').textContent = '云同步 · 管理员登录';
+    document.getElementById('adminPwConfirmField').hidden = true;
+    document.getElementById('adminPwHint').textContent = '用你的云端账号登录(账号密码由后端管理)。';
+  } else {
+    document.getElementById('adminUserField').hidden = true;
+    const has = !!adminPwHash();
+    document.getElementById('adminPwTitle').textContent = has ? '请输入管理员密码' : '首次进入,请设置管理员密码';
+    document.getElementById('adminPwConfirmField').hidden = has;
+    document.getElementById('adminPwHint').textContent = has ? '管理员密码与访问密码是两套密码。' : '设置一个独立的管理员密码(与访问密码分开)。';
+  }
+  val('adminPwInput',''); val('adminPwConfirm',''); val('adminUserInput','');
   document.getElementById('adminPwModal').hidden = false;
   setTimeout(() => document.getElementById('adminPwInput').focus(), 0);
 }
@@ -1596,7 +1721,17 @@ function unlockAdmin(){
   admin.classList.add('open'); renderEditor();
   if(!document.getElementById('memPanel').hidden) showMemories(_memLoc.province, _memLoc.city);
 }
-function adminPwSubmit(){
+async function adminPwSubmit(){
+  if(CLOUD.enabled){
+    const user = val('adminUserInput').trim();
+    const pw = val('adminPwInput');
+    if(!user){ alert('请输入账号'); return; }
+    if(!pw){ alert('请输入密码'); return; }
+    const ok = await cloudLogin(user, pw);
+    if(ok) unlockAdmin();
+    else alert('账号或密码不对,或登录失败');
+    return;
+  }
   const has = !!adminPwHash();
   const pw = val('adminPwInput').trim();
   if(has){
@@ -1780,7 +1915,7 @@ function saveAndApply(){
   const pw = val('set-pw');
   if(pw){ if(pw.length < 4){ alert('密码至少 4 位'); return; } try{ localStorage.setItem('love-admin', hashPw(pw)); }catch(e){} }
   const apw = val('set-adminpw');
-  if(apw){ if(apw.length < 4){ alert('管理员密码至少 4 位'); return; } try{ localStorage.setItem('love-adminpw', hashPw(apw)); }catch(e){} }
+  if(apw && !CLOUD.enabled){ if(apw.length < 4){ alert('管理员密码至少 4 位'); return; } try{ localStorage.setItem('love-adminpw', hashPw(apw)); }catch(e){} }
   START = new Date(SITE.startDate + 'T00:00:00');
   saveSite(); renderAll(); closeAdmin(); updateCounter();
   document.getElementById('memPanel').hidden = true;
@@ -1815,7 +1950,12 @@ function processImage(file, cb){
       if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
       const c = document.createElement('canvas'); c.width = w; c.height = h;
       c.getContext('2d').drawImage(img, 0, 0, w, h);
-      cb(c.toDataURL('image/jpeg', 0.82));
+      const dataUrl = c.toDataURL('image/jpeg', 0.82);
+      if(CLOUD.enabled){
+        cloudUpload(dataUrl).then(url => cb(url)).catch(err => { console.error('上传云端失败,改用本地 base64', err); cb(dataUrl); });
+      } else {
+        cb(dataUrl);
+      }
     };
     img.onerror = () => { alert('有张图片格式无法读取,已跳过(请用 JPG / PNG)。'); cb(null); };
     img.src = e.target.result;
@@ -1841,6 +1981,8 @@ renderHero();
 renderLoginAlbum();
 updateCounter();
 setInterval(updateCounter, 1000);
+applyCloudUI();
+cloudPull();
 
 makeDraggable('playerCard');
 makeDraggable('avatarsCard');
